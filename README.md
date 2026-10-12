@@ -4,7 +4,7 @@
 
 | | |
 | --- | --- |
-| 版本 | 1.2.0（[CHANGELOG](CHANGELOG.md)） |
+| 版本 | 1.3.0（[CHANGELOG](CHANGELOG.md)） |
 | 要求 | spec-kit CLI >= 0.5.0（已在 v0.14.4 验证） |
 | 许可证 | [MIT](LICENSE) |
 
@@ -16,6 +16,7 @@
 - **需求在界面上藏污纳垢**——specify 之前先做 UI Demo 并迭代冻结（视觉原型是最高效的消歧工具）
 - **分析发现问题之后怎么办**——分析报告按轮次落盘，配套 clarify→plan→tasks 消除回路，Critical~Low 全部立即消除、闭环验证
 - **每个里程碑怎么算"成了"**——《实现与验收报告》含逐项人工验收操作指南，用户打勾后才允许合流发布
+- **用户不知道下一步该敲哪条命令**——初始化时向 AGENTS.md 注入"工作流领航提醒块"（speckit.setup），Agent 每次回复末尾自动提示当前环节与主线/可选操作，可随时 remove
 
 ## 安装
 
@@ -23,7 +24,7 @@
 
 ~~~bash
 # 方式 A：从 GitHub 发布包安装（推荐）
-specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.2.0.zip
+specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.3.0.zip
 
 # 方式 B：本地目录安装（开发/调试）
 specify preset add --dev /path/to/speckit-preset-milestone-driven-dev
@@ -50,16 +51,19 @@ git checkout -b develop && git push -u origin develop
 
 # 2. 初始化 spec-kit 并安装本 preset
 specify init --here --integration codex      # 或 claude / copilot 等
-specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.2.0.zip
+specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.3.0.zip
 
-# 3. 项目宪法：固化技术栈底线、质量门禁、分支纪律
+# 3. 注入 AGENTS.md 工作流领航提醒（Agent 每次回复末尾提示下一步）
+/speckit.setup
+
+# 4. 项目宪法：固化技术栈底线、质量门禁、分支纪律
 /speckit.constitution
 
-# 4. 里程碑规划（功能愿景 → M1…Mn + 依赖 DAG）
+# 5. 里程碑规划（功能愿景 → M1…Mn + 依赖 DAG）
 /speckit.milestones init
 #   愿景来源缺失的全新项目可先用 /speckit.prd 生成 PRD
 
-# 5. 逐里程碑开发循环（见下方流程图），从 M1 开始
+# 6. 逐里程碑开发循环（见下方流程图），从 M1 开始
 /speckit.prototype gen M1
 ~~~
 
@@ -70,7 +74,8 @@ flowchart TD
     subgraph INIT["一次性初始化"]
         A["git init + 远程 main/develop"] --> B["specify init"]
         B --> C["specify preset add（本 preset）"]
-        C --> D["/speckit.constitution 项目宪法"]
+        C --> C2["/speckit.setup 注入 AGENTS.md 提醒块"]
+        C2 --> D["/speckit.constitution 项目宪法"]
     end
     PRD["/speckit.prd<br/>可选：愿景缺失的新项目"] -.-> E
     D --> E["/speckit.milestones init<br/>里程碑规划 M1…Mn + 依赖 DAG"]
@@ -138,13 +143,15 @@ flowchart TD
 | 功能愿景来源 | `speckit.milestones init` 时指定（`--vision <路径>` 或询问） | 询问；缺失可先用 speckit.prd 生成 |
 | UX 基线路径 | `.specify/memory/milestones.md` §一 `ux_baseline` | `docs/ux-baseline/`（用 ux-baseline-template 建立） |
 | 分析报告输出目录 | constitution 中可改配 | `./.prepare/docs/specs-analysis-repo/` |
+| AGENTS.md 提醒块 | `/speckit.setup`（inject/remove/status） | 项目根 `AGENTS.md`，标记块幂等注入 |
 
 ## 文件清单
 
 ~~~text
 ├── preset.yml                      preset 清单（schema 1.0）
 ├── README.md / LICENSE / CHANGELOG.md
-├── commands/                       11 个命令
+├── commands/                       12 个命令
+│   ├── speckit.setup.md            AGENTS.md 提醒块注入（inject/remove/status）
 │   ├── speckit.milestones.md       里程碑规划（init/add/revise/status）
 │   ├── speckit.prototype.md        UI Demo 先行（gen/freeze/skip/status）
 │   ├── speckit.prd.md              PRD（可选，愿景缺失时启用）
@@ -156,10 +163,11 @@ flowchart TD
 │   ├── speckit.acceptance.md       实现与验收报告
 │   ├── speckit.release.md          合流发布（feature/Mx→develop→main）
 │   └── speckit.hotfix.md           bug 修复双路径
-└── templates/                      6 个模板
+└── templates/                      7 个模板
     ├── milestones-template.md      里程碑规划（优先级/用户旅程/依赖 DAG）
     ├── prototype-template.md       UI Demo 说明清单（SCR-nn 屏清单）
     ├── ux-baseline-template.md     UX 设计基线（设计令牌/组件约定）
+    ├── agents-reminder-template.md AGENTS.md 领航提醒块（状态检测表）
     ├── analysis-report-template.md 分析报告（轮次追加）
     ├── implementation-report-template.md  实现与验收报告
     └── prd-template.md             PRD（可选）

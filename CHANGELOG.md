@@ -2,6 +2,16 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [1.3.0] - 2026-10-12
+
+### Added
+- 新命令 `speckit.setup`：向项目根 `AGENTS.md` 幂等注入"工作流领航提醒块"（inject/remove/status 三模式，BEGIN/END 标记包裹支持升级替换）；注入后 Agent 每次回复末尾自动提示当前环节与主线必选/旁路可选操作
+- 新模板 `agents-reminder-template`：提醒块内容（13 态状态检测表 + 输出格式约束），单一维护源
+- README 快速开始新增 `/speckit.setup` 步骤，流程图 INIT 子图同步
+
+### Fixed
+- **修复自 v1.0 起的潜在缺陷**：preset.yml 中命令原置于 `provides.commands` 独立键下，而 spec-kit CLI 仅识别 `provides.templates` 内的条目（type: command），导致全部命令从未注册到 Agent（安装不报错、静默忽略）。已将 12 个命令并入 `provides.templates` 列表，经 CLI v0.14.4 沙箱验证：8 个新命令注册为新技能、4 个覆盖命令正确接管
+
 ## [1.2.0] - 2026-10-11
 
 ### Changed
