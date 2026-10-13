@@ -2,6 +2,12 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [1.3.1] - 2026-10-13
+
+### Documentation
+- README 双语化：`README.md` 改为英文（默认），中文内容移至 `README.zh-CN.md`，两版互链（English | 简体中文）
+- 两版 README 增加徽章行（版本/spec-kit 要求/许可证）与一句话标语
+
 ## [1.3.0] - 2026-10-12
 
 ### Added

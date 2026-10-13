@@ -2,7 +2,7 @@ schema_version: "1.0"
 preset:
   id: "milestone-driven-dev"
   name: "Milestone-Driven Development Workflow"
-  version: "1.3.0"
+  version: "1.3.1"
   description: "Milestone-first customization of spec-kit: a milestones plan gates all specify runs (one milestone = one module = one spec), a UI prototype stage iterates and freezes the demo before specify, analysis reports accumulate per spec with a clarify/plan/tasks rectification loop, every spec ends with an implementation & acceptance report, and git flow is main/develop + feature/Mx with DevOps-style iteration and hotfix paths. A setup command injects a workflow-navigator block into the project's AGENTS.md so the agent proactively reminds the user of current stage and available next actions (required + optional) after every reply. Includes an optional PRD command for greenfield projects (disabled by default)."
   author: "luoxi591"
   repository: "https://github.com/sigentech/speckit-preset-milestone-driven-dev"
