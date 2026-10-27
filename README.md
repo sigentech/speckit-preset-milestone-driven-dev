@@ -1,6 +1,6 @@
 # Milestone-Driven Development Workflow
 
-![Version](https://img.shields.io/badge/Version-v1.3.1-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-v1.4.0-blue?style=for-the-badge)
 ![spec-kit](https://img.shields.io/badge/spec--kit-%3E%3D0.5.0-orange?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
@@ -12,7 +12,7 @@ A [spec-kit](https://github.com/github/spec-kit) preset that extends spec-driven
 
 | | |
 | --- | --- |
-| Version | 1.3.1 ([CHANGELOG](CHANGELOG.md)) |
+| Version | 1.4.0 ([CHANGELOG](CHANGELOG.md)) |
 | Requires | spec-kit CLI >= 0.5.0 (verified on v0.14.4) |
 | License | [MIT](LICENSE) |
 
@@ -25,6 +25,7 @@ Stock spec-kit covers "how one feature goes from spec to code" — but not:
 - **What to do after analysis finds problems** — analysis reports persist per round, paired with a clarify→plan→tasks rectification loop: Critical through Low are all eliminated immediately, with closed-loop verification.
 - **When a milestone counts as "done"** — the Implementation & Acceptance Report includes per-item manual acceptance guides; merge and release only after the user ticks every box.
 - **Users not knowing which command comes next** — at setup time, a workflow-navigator block is injected into AGENTS.md (speckit.setup), so the agent ends every reply with the current stage and available required/optional actions; removable at any time.
+- **Thinking that needs pressure-testing mid-flow** — two anytime side skills: `/speckit.grill` (a relentless design-tree interview) and `/speckit.brainstorm` (dialogue-first design doc with a builder check and a browser visual companion). Usable at any stage; their conclusions always sink into the artifact of the stage they were invoked in, never into stray side files.
 
 ## Installation
 
@@ -32,7 +33,7 @@ Inside an initialized spec-kit project (after `specify init`):
 
 ~~~bash
 # Option A: install from the GitHub release archive (recommended)
-specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.3.1.zip
+specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.4.0.zip
 
 # Option B: install from a local directory (development)
 specify preset add --dev /path/to/speckit-preset-milestone-driven-dev
@@ -62,7 +63,7 @@ git checkout -b develop && git push -u origin develop
 
 # 2. Initialize spec-kit and install this preset
 specify init --here --integration codex      # or claude / copilot, etc.
-specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.3.1.zip
+specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.4.0.zip
 
 # 3. Inject the AGENTS.md workflow navigator (agent suggests next steps after every reply)
 /speckit.setup
@@ -149,6 +150,8 @@ flowchart TD
 
 **Implementation & acceptance report**: after every agent-executable task in tasks.md completes, generate `implementation-report.md` (implementation overview / automated verification / key decisions / **per-item manual acceptance guides** / artifact locator); the report is committed with docs and pushed; release requires every acceptance item "passed".
 
+**Anytime deep-dive skills** (speckit.grill / speckit.brainstorm): side skills callable at any stage when a decision needs pressure-testing or open-ended exploration. Grill runs a design-tree interview in numbered rounds (agent digs up the facts, the user owns the decisions) until nothing is silently assumed. Brainstorm talks through what and why before anything is built, lays out approaches, writes a design doc (full version gets a blind builder check by a fresh subagent; a browser visual companion serves mockups when seeing beats reading), and builds nothing until the doc is approved. Both record their conclusions into the current stage's artifact — constitution/PRD input, milestones change log, prototype iteration log, spec clarifications, plan decisions, or rectify routing — and never into stray side files; brainstorm's design doc lands in the current spec's `design/` folder (or project-level `docs/design/` before any spec exists), then routes back to the stage's main-line command.
+
 ## Configuration
 
 | Setting | Where | Default |
@@ -165,7 +168,7 @@ flowchart TD
 ~~~text
 ├── preset.yml                      preset manifest (schema 1.0)
 ├── README.md / README.zh-CN.md / LICENSE / CHANGELOG.md
-├── commands/                       12 commands
+├── commands/                       14 commands
 │   ├── speckit.setup.md            AGENTS.md navigator injection (inject/remove/status)
 │   ├── speckit.milestones.md       milestone planning (init/add/revise/status)
 │   ├── speckit.prototype.md        UI demo first (gen/freeze/skip/status)
@@ -177,20 +180,26 @@ flowchart TD
 │   ├── speckit.implement.md        (override) gates + hand-off to acceptance
 │   ├── speckit.acceptance.md       implementation & acceptance report
 │   ├── speckit.release.md          merge & release (feature/Mx→develop→main)
-│   └── speckit.hotfix.md           dual-path bug fixing
-└── templates/                      7 templates
+│   ├── speckit.hotfix.md           dual-path bug fixing
+│   ├── speckit.grill.md            (side) relentless design-tree interview, any stage
+│   └── speckit.brainstorm.md       (side) dialogue-first brainstorm → approved design doc
+└── templates/                      9 templates
     ├── milestones-template.md      milestone plan (priority/user journey/dependency DAG)
     ├── prototype-template.md       UI demo checklist (SCR-nn screen list)
     ├── ux-baseline-template.md     UX design baseline (design tokens/component conventions)
     ├── agents-reminder-template.md AGENTS.md navigator block (state-detection table)
     ├── analysis-report-template.md analysis report (appended per round)
     ├── implementation-report-template.md  implementation & acceptance report
-    └── prd-template.md             PRD (optional)
+    ├── prd-template.md             PRD (optional)
+    └── brainstorming/              speckit.brainstorm companions
+        ├── builder-check-prompt.md builder blind-review prompt for design docs
+        ├── visual-companion.md     browser visual-companion guide
+        └── scripts/                companion server (server.cjs / helper.js / frame-template.html / start / stop)
 ~~~
 
 ## Design Lineage
 
-This preset was originally developed as SPEC-003 of the Research-reports-writing-guru project (governing the system development of an "intelligent research-report writing system"); it became a standalone, general-purpose preset in v1.2.0. Its form follows [adaumann/speckit-preset-fiction-book-writing](https://github.com/adaumann/speckit-preset-fiction-book-writing); its methodological core is milestone-driven planning + DevOps iteration + spec-kit spec-driven development.
+This preset was originally developed as SPEC-003 of the Research-reports-writing-guru project (governing the system development of an "intelligent research-report writing system"); it became a standalone, general-purpose preset in v1.2.0. Its form follows [adaumann/speckit-preset-fiction-book-writing](https://github.com/adaumann/speckit-preset-fiction-book-writing); its methodological core is milestone-driven planning + DevOps iteration + spec-kit spec-driven development. The two side skills are ported from mattpocock's grilling / grill-me skills and obra's superpowers brainstorming skill, adapted so their outputs land in the artifacts of the workflow stage they are invoked in.
 
 ## License
 

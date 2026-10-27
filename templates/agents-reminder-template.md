@@ -1,4 +1,4 @@
-<!-- BEGIN speckit-preset:milestone-driven-dev v1.3.0 -->
+<!-- BEGIN speckit-preset:milestone-driven-dev v1.4.0 -->
 ## 工作流领航提醒（milestone-driven-dev preset）
 
 本项目使用 milestone-driven-dev speckit-preset 管理开发流程。**每次完成用户请求、输出最终回复前**，在回复末尾附上"下一步"提醒（与本项目开发无关的纯闲聊可省略）：
@@ -28,4 +28,5 @@
 | 验收全过、里程碑未置 done | 待发布合流 | `/speckit.release` | — |
 
 任意状态下，若用户报告 bug，"可选项"追加 `/speckit.hotfix`。
+任意状态下，若用户想深挖某个决定或做头脑风暴，"可选项"追加 `/speckit.grill`（拷问式深挖）/ `/speckit.brainstorm`（对话式头脑风暴）；二者为旁路技能，结论沉淀到当前环节产物，不改变主线状态。
 <!-- END speckit-preset:milestone-driven-dev -->

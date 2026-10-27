@@ -1,6 +1,6 @@
 # Milestone-Driven Development Workflow（里程碑驱动开发工作流）
 
-![Version](https://img.shields.io/badge/Version-v1.3.1-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-v1.4.0-blue?style=for-the-badge)
 ![spec-kit](https://img.shields.io/badge/spec--kit-%3E%3D0.5.0-orange?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
@@ -12,7 +12,7 @@
 
 | | |
 | --- | --- |
-| 版本 | 1.3.1（[CHANGELOG](CHANGELOG.md)） |
+| 版本 | 1.4.0（[CHANGELOG](CHANGELOG.md)） |
 | 要求 | spec-kit CLI >= 0.5.0（已在 v0.14.4 验证） |
 | 许可证 | [MIT](LICENSE) |
 
@@ -25,6 +25,7 @@
 - **分析发现问题之后怎么办**——分析报告按轮次落盘，配套 clarify→plan→tasks 消除回路，Critical~Low 全部立即消除、闭环验证
 - **每个里程碑怎么算"成了"**——《实现与验收报告》含逐项人工验收操作指南，用户打勾后才允许合流发布
 - **用户不知道下一步该敲哪条命令**——初始化时向 AGENTS.md 注入"工作流领航提醒块"（speckit.setup），Agent 每次回复末尾自动提示当前环节与主线/可选操作，可随时 remove
+- **想法在流程中途需要压力测试**——两个任意环节可用的旁路技能：`/speckit.grill`（设计树拷问式深挖）与 `/speckit.brainstorm`（对话先行、设计文档经建造者盲审、可选浏览器可视化伴侣）。结论一律沉淀到调用时所在环节的正式产物，不产生游离文件
 
 ## 安装
 
@@ -32,7 +33,7 @@
 
 ~~~bash
 # 方式 A：从 GitHub 发布包安装（推荐）
-specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.3.1.zip
+specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.4.0.zip
 
 # 方式 B：本地目录安装（开发/调试）
 specify preset add --dev /path/to/speckit-preset-milestone-driven-dev
@@ -62,7 +63,7 @@ git checkout -b develop && git push -u origin develop
 
 # 2. 初始化 spec-kit 并安装本 preset
 specify init --here --integration codex      # 或 claude / copilot 等
-specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.3.1.zip
+specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.4.0.zip
 
 # 3. 注入 AGENTS.md 工作流领航提醒（Agent 每次回复末尾提示下一步）
 /speckit.setup
@@ -149,6 +150,8 @@ flowchart TD
 
 **实现与验收报告**：tasks 全部 Agent 可执行任务完成后生成 `implementation-report.md`（实现概述/自动化验证/技术决策/**逐项人工验收操作指南**/产物速查）；报告随 docs 提交并推送远程；验收项全"通过"方可 release。
 
+**任意环节的深挖技能**（speckit.grill / speckit.brainstorm）：流程任何环节可调用的旁路技能。grill 以设计树逐轮拷问（查事实归 Agent，做决定归用户），直到没有隐含假设；brainstorm 先对话聊清要什么/为什么，再摆做法、写设计文档（完整版经全新子代理盲审；看比读更直观时可用浏览器可视化伴侣展示稿图），文档批准前不动工。两者的结论一律沉淀到当前环节产物——宪法/PRD 输入、milestones 变更日志、prototype 迭代记录、spec 澄清、plan 决策、rectify 路由——不另起游离文件；brainstorm 的设计文档落当前 spec 的 `design/` 目录（尚无 spec 时落项目级 `docs/design/`），获批后路由回当前环节主线命令。
+
 ## 配置项
 
 | 配置 | 位置 | 默认 |
@@ -163,7 +166,7 @@ flowchart TD
 ~~~text
 ├── preset.yml                      preset 清单（schema 1.0）
 ├── README.md（English）/ README.zh-CN.md / LICENSE / CHANGELOG.md
-├── commands/                       12 个命令
+├── commands/                       14 个命令
 │   ├── speckit.setup.md            AGENTS.md 提醒块注入（inject/remove/status）
 │   ├── speckit.milestones.md       里程碑规划（init/add/revise/status）
 │   ├── speckit.prototype.md        UI Demo 先行（gen/freeze/skip/status）
@@ -175,20 +178,26 @@ flowchart TD
 │   ├── speckit.implement.md        （覆盖）门禁+收尾接 acceptance
 │   ├── speckit.acceptance.md       实现与验收报告
 │   ├── speckit.release.md          合流发布（feature/Mx→develop→main）
-│   └── speckit.hotfix.md           bug 修复双路径
-└── templates/                      7 个模板
+│   ├── speckit.hotfix.md           bug 修复双路径
+│   ├── speckit.grill.md            （旁路）设计树拷问式深挖，任意环节可用
+│   └── speckit.brainstorm.md       （旁路）对话式头脑风暴 → 批准后路由回主线
+└── templates/                      9 个模板
     ├── milestones-template.md      里程碑规划（优先级/用户旅程/依赖 DAG）
     ├── prototype-template.md       UI Demo 说明清单（SCR-nn 屏清单）
     ├── ux-baseline-template.md     UX 设计基线（设计令牌/组件约定）
     ├── agents-reminder-template.md AGENTS.md 领航提醒块（状态检测表）
     ├── analysis-report-template.md 分析报告（轮次追加）
     ├── implementation-report-template.md  实现与验收报告
-    └── prd-template.md             PRD（可选）
+    ├── prd-template.md             PRD（可选）
+    └── brainstorming/              speckit.brainstorm 配套资源
+        ├── builder-check-prompt.md 设计文档建造者盲审提示词
+        ├── visual-companion.md     浏览器可视化伴侣指南
+        └── scripts/                伴侣服务脚本（server.cjs / helper.js / frame-template.html / start / stop）
 ~~~
 
 ## 设计渊源
 
-本 preset 最初作为 Research-reports-writing-guru 项目的 SPEC-003 开发（用于规范"研究报告智能撰写系统"的系统开发），v1.2.0 起解耦为独立通用 preset。形式范式参考 [adaumann/speckit-preset-fiction-book-writing](https://github.com/adaumann/speckit-preset-fiction-book-writing)；方法论内核为里程碑驱动 + DevOps 迭代 + spec-kit 规约驱动开发。
+本 preset 最初作为 Research-reports-writing-guru 项目的 SPEC-003 开发（用于规范"研究报告智能撰写系统"的系统开发），v1.2.0 起解耦为独立通用 preset。形式范式参考 [adaumann/speckit-preset-fiction-book-writing](https://github.com/adaumann/speckit-preset-fiction-book-writing)；方法论内核为里程碑驱动 + DevOps 迭代 + spec-kit 规约驱动开发。两个旁路技能分别移植自 mattpocock 的 grilling / grill-me 技能与 obra 的 superpowers brainstorming 技能，均已适配为"产出落入调用时所在环节的产物"。
 
 ## 许可证
 
