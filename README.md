@@ -1,6 +1,6 @@
 # Milestone-Driven Development Workflow
 
-![Version](https://img.shields.io/badge/Version-v1.4.0-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-v1.5.0-blue?style=for-the-badge)
 ![spec-kit](https://img.shields.io/badge/spec--kit-%3E%3D0.5.0-orange?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
@@ -12,7 +12,7 @@ A [spec-kit](https://github.com/github/spec-kit) preset that extends spec-driven
 
 | | |
 | --- | --- |
-| Version | 1.4.0 ([CHANGELOG](CHANGELOG.md)) |
+| Version | 1.5.0 ([CHANGELOG](CHANGELOG.md)) |
 | Requires | spec-kit CLI >= 0.5.0 (verified on v0.14.4) |
 | License | [MIT](LICENSE) |
 
@@ -33,7 +33,7 @@ Inside an initialized spec-kit project (after `specify init`):
 
 ~~~bash
 # Option A: install from the GitHub release archive (recommended)
-specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.4.0.zip
+specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.5.0.zip
 
 # Option B: install from a local directory (development)
 specify preset add --dev /path/to/speckit-preset-milestone-driven-dev
@@ -63,7 +63,7 @@ git checkout -b develop && git push -u origin develop
 
 # 2. Initialize spec-kit and install this preset
 specify init --here --integration codex      # or claude / copilot, etc.
-specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.4.0.zip
+specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.5.0.zip
 
 # 3. Inject the AGENTS.md workflow navigator (agent suggests next steps after every reply)
 /speckit.setup
@@ -150,7 +150,7 @@ flowchart TD
 
 **Implementation & acceptance report**: after every agent-executable task in tasks.md completes, generate `implementation-report.md` (implementation overview / automated verification / key decisions / **per-item manual acceptance guides** / artifact locator); the report is committed with docs and pushed; release requires every acceptance item "passed".
 
-**Anytime deep-dive skills** (speckit.grill / speckit.brainstorm): side skills callable at any stage when a decision needs pressure-testing or open-ended exploration. Grill runs a design-tree interview in numbered rounds (agent digs up the facts, the user owns the decisions) until nothing is silently assumed. Brainstorm talks through what and why before anything is built, lays out approaches, writes a design doc (full version gets a blind builder check by a fresh subagent; a browser visual companion serves mockups when seeing beats reading), and builds nothing until the doc is approved. Both record their conclusions into the current stage's artifact — constitution/PRD input, milestones change log, prototype iteration log, spec clarifications, plan decisions, or rectify routing — and never into stray side files; brainstorm's design doc lands in the current spec's `design/` folder (or project-level `docs/design/` before any spec exists), then routes back to the stage's main-line command.
+**Anytime deep-dive skills** (speckit.grill / speckit.brainstorm): side skills callable at any stage when a decision needs pressure-testing or open-ended exploration. Grill runs a design-tree interview in numbered rounds (agent digs up the facts, the user owns the decisions) until nothing is silently assumed. Brainstorm talks through what and why before anything is built, lays out approaches, writes a design doc (full version gets a blind builder check by a fresh subagent; a browser visual companion serves mockups when seeing beats reading), and builds nothing until the doc is approved. Both record their conclusions into the current stage's artifact — milestones change log, prototype iteration log, spec clarifications, plan decisions, or rectify routing — and never into stray side files; brainstorm's design doc lands in the current spec's `design/` folder. **Invoked before constitution/PRD/milestones exist** (right after preset setup), outputs are registered in `docs/explore/` with a frontmatter status machine (`pending-absorb`/`absorbed`): speckit.prd and speckit.milestones init automatically scan and absorb them as vision material, then write back the absorption target — early exploration never gets lost between stages and stays traceable. The navigator block surfaces the pending-absorb count every reply.
 
 ## Configuration
 
@@ -159,6 +159,7 @@ flowchart TD
 | Feature-vision source | given at `speckit.milestones init` (`--vision <path>` or asked) | asked; if missing, generate a PRD via speckit.prd |
 | UX baseline path | `.specify/memory/milestones.md` §1 `ux_baseline` | `docs/ux-baseline/` (created from ux-baseline-template) |
 | Analysis-report directory | reconfigurable in the constitution | `./.prepare/docs/specs-analysis-repo/` |
+| Early-exploration registry | fixed convention (grill/brainstorm write; prd/milestones absorb) | `docs/explore/` |
 | AGENTS.md navigator block | `/speckit.setup` (inject/remove/status) | project-root `AGENTS.md`, marker-wrapped idempotent injection |
 
 | AGENTS.md navigator block | `/speckit.setup` (inject/remove/status) | project-root `AGENTS.md`, marker-wrapped idempotent injection |
@@ -183,7 +184,7 @@ flowchart TD
 │   ├── speckit.hotfix.md           dual-path bug fixing
 │   ├── speckit.grill.md            (side) relentless design-tree interview, any stage
 │   └── speckit.brainstorm.md       (side) dialogue-first brainstorm → approved design doc
-└── templates/                      9 templates
+└── templates/                      10 templates
     ├── milestones-template.md      milestone plan (priority/user journey/dependency DAG)
     ├── prototype-template.md       UI demo checklist (SCR-nn screen list)
     ├── ux-baseline-template.md     UX design baseline (design tokens/component conventions)
@@ -191,6 +192,7 @@ flowchart TD
     ├── analysis-report-template.md analysis report (appended per round)
     ├── implementation-report-template.md  implementation & acceptance report
     ├── prd-template.md             PRD (optional)
+    ├── explore-note-template.md    early-exploration note (frontmatter absorb-state machine)
     └── brainstorming/              speckit.brainstorm companions
         ├── builder-check-prompt.md builder blind-review prompt for design docs
         ├── visual-companion.md     browser visual-companion guide

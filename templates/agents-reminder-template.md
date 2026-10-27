@@ -1,4 +1,4 @@
-<!-- BEGIN speckit-preset:milestone-driven-dev v1.4.0 -->
+<!-- BEGIN speckit-preset:milestone-driven-dev v1.5.0 -->
 ## 工作流领航提醒（milestone-driven-dev preset）
 
 本项目使用 milestone-driven-dev speckit-preset 管理开发流程。**每次完成用户请求、输出最终回复前**，在回复末尾附上"下一步"提醒（与本项目开发无关的纯闲聊可省略）：
@@ -14,7 +14,7 @@
 
 | 证据（文件系统） | 当前环节 | 主线下一步 | 可选项 |
 | --- | --- | --- | --- |
-| 无 `.specify/memory/constitution.md` | 未立项目宪法 | `/speckit.constitution` | — |
+| 无 `.specify/memory/constitution.md` | 未立项目宪法 | `/speckit.constitution`（有 explore 素材先通读） | — |
 | 无 `.specify/memory/milestones.md` | 未规划里程碑 | `/speckit.milestones init` | `/speckit.prd`（愿景缺失的全新项目） |
 | 无当前 spec（无 `specs/` 或里程碑全 done） | 待启动下一里程碑 | 从 develop 开 `feature/Mx` → `/speckit.prototype gen Mx` | `/speckit.milestones status` / `add` / `revise` |
 | 当前 spec 的 prototype.md 未冻结且未 skip | UI Demo 未冻结 | 迭代 Demo → `/speckit.prototype freeze` | `/speckit.prototype status`；引擎型可 `skip` |
@@ -29,4 +29,5 @@
 
 任意状态下，若用户报告 bug，"可选项"追加 `/speckit.hotfix`。
 任意状态下，若用户想深挖某个决定或做头脑风暴，"可选项"追加 `/speckit.grill`（拷问式深挖）/ `/speckit.brainstorm`（对话式头脑风暴）；二者为旁路技能，结论沉淀到当前环节产物，不改变主线状态。
+`docs/explore/` 下存在 `status: pending-absorb` 文件时，在"可选项"注明"有 N 份前期探索产出待吸收"，并在进入 constitution / prd / milestones 环节时提醒优先参考——这些文件是 grill/brainstorm 的前期产出，会被对应命令自动吸收。
 <!-- END speckit-preset:milestone-driven-dev -->

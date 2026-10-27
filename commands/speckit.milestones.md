@@ -29,7 +29,12 @@ $ARGUMENTS
 ## 模式：init
 
 1. **前置检查**：`.specify/memory/constitution.md` 存在（无则提示先运行 speckit.constitution）；milestones.md 不存在（已存在则中止并提示用 add/revise）。
-2. **采集功能愿景**：从 `$ARGUMENTS`（如 `--vision <路径>`）或询问用户确定功能愿景来源——可以是既有规范文档、PRD（`.specify/memory/prd.md`）或用户口头描述。若项目尚无任何愿景文档，提示：可先运行 `speckit.prd` 生成，或直接以访谈形式现场采集。
+2. **采集功能愿景**，来源解析按优先级：
+   1. `$ARGUMENTS` 显式指定（如 `--vision <路径>`）
+   2. `.specify/memory/prd.md`（若存在）
+   3. `docs/explore/` 下 frontmatter 为 `status: pending-absorb` 的前期探索产出（`/speckit.grill`、`/speckit.brainstorm` 生成）——全部通读，作为愿景素材
+   4. 以上皆无 → 询问用户；若项目尚无任何愿景文档，提示可先运行 `speckit.prd` 生成，或直接以访谈形式现场采集
+   愿景来源为 PRD 与探索产出的组合时，两者都要读；探索产出中与 PRD 冲突的点，向用户确认以哪份为准。
 3. **划分里程碑**，密度原则（逐条向用户呈现划分结果与理由）：
    - **一个里程碑实现一个功能模块**：边界按"用户可感知的功能闭环"划，不按技术层切
    - **独立可验收**：每个里程碑交付物能被用户单独验收（有明确的操作路径与预期结果）
@@ -37,7 +42,7 @@ $ARGUMENTS
    - **先地基后上层**：项目骨架、数据模型、核心引擎优先；集成、打磨、资产线靠后
 4. **标注依赖关系**：每个里程碑填 依赖/被依赖/可并行；**DAG 校验**（不得有环）；按依赖分层得出并行组（A/B/…）。
 5. **逐里程碑填六项**：目标与价值、实现功能（含/不含）、技术栈增量、依赖关系、用户验收指导（3~7 条要点）、规模档位与风险。
-6. **用户确认**后写入 `.specify/memory/milestones.md`（从 milestones-template 生成），版本 v1.0。
+6. **用户确认**后写入 `.specify/memory/milestones.md`（从 milestones-template 生成），版本 v1.0。**回写吸收状态**：把本步吸收过的 `docs/explore/` 文件 frontmatter 更新为 `status: absorbed`、`absorbed_by: .specify/memory/milestones.md（YYYY-MM-DD）`；刻意未吸收的保持 `pending-absorb` 并向用户说明原因。
 7. **报告**：里程碑总表、并行分组、建议的首个里程碑；提示下一步 `speckit.specify`。
 
 ## 模式：add

@@ -1,6 +1,6 @@
 # Milestone-Driven Development Workflow（里程碑驱动开发工作流）
 
-![Version](https://img.shields.io/badge/Version-v1.4.0-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-v1.5.0-blue?style=for-the-badge)
 ![spec-kit](https://img.shields.io/badge/spec--kit-%3E%3D0.5.0-orange?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
@@ -12,7 +12,7 @@
 
 | | |
 | --- | --- |
-| 版本 | 1.4.0（[CHANGELOG](CHANGELOG.md)） |
+| 版本 | 1.5.0（[CHANGELOG](CHANGELOG.md)） |
 | 要求 | spec-kit CLI >= 0.5.0（已在 v0.14.4 验证） |
 | 许可证 | [MIT](LICENSE) |
 
@@ -33,7 +33,7 @@
 
 ~~~bash
 # 方式 A：从 GitHub 发布包安装（推荐）
-specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.4.0.zip
+specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.5.0.zip
 
 # 方式 B：本地目录安装（开发/调试）
 specify preset add --dev /path/to/speckit-preset-milestone-driven-dev
@@ -63,7 +63,7 @@ git checkout -b develop && git push -u origin develop
 
 # 2. 初始化 spec-kit 并安装本 preset
 specify init --here --integration codex      # 或 claude / copilot 等
-specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.4.0.zip
+specify preset add --from https://github.com/sigentech/speckit-preset-milestone-driven-dev/archive/refs/tags/v1.5.0.zip
 
 # 3. 注入 AGENTS.md 工作流领航提醒（Agent 每次回复末尾提示下一步）
 /speckit.setup
@@ -150,7 +150,7 @@ flowchart TD
 
 **实现与验收报告**：tasks 全部 Agent 可执行任务完成后生成 `implementation-report.md`（实现概述/自动化验证/技术决策/**逐项人工验收操作指南**/产物速查）；报告随 docs 提交并推送远程；验收项全"通过"方可 release。
 
-**任意环节的深挖技能**（speckit.grill / speckit.brainstorm）：流程任何环节可调用的旁路技能。grill 以设计树逐轮拷问（查事实归 Agent，做决定归用户），直到没有隐含假设；brainstorm 先对话聊清要什么/为什么，再摆做法、写设计文档（完整版经全新子代理盲审；看比读更直观时可用浏览器可视化伴侣展示稿图），文档批准前不动工。两者的结论一律沉淀到当前环节产物——宪法/PRD 输入、milestones 变更日志、prototype 迭代记录、spec 澄清、plan 决策、rectify 路由——不另起游离文件；brainstorm 的设计文档落当前 spec 的 `design/` 目录（尚无 spec 时落项目级 `docs/design/`），获批后路由回当前环节主线命令。
+**任意环节的深挖技能**（speckit.grill / speckit.brainstorm）：流程任何环节可调用的旁路技能。grill 以设计树逐轮拷问（查事实归 Agent，做决定归用户），直到没有隐含假设；brainstorm 先对话聊清要什么/为什么，再摆做法、写设计文档（完整版经全新子代理盲审；看比读更直观时可用浏览器可视化伴侣展示稿图），文档批准前不动工。两者的结论一律沉淀到当前环节产物——milestones 变更日志、prototype 迭代记录、spec 澄清、plan 决策、rectify 路由——不另起游离文件；brainstorm 的设计文档落当前 spec 的 `design/` 目录，获批后路由回当前环节主线命令。**在宪法/PRD/里程碑规划之前调用**（preset 装完就用）时，产出统一登记到 `docs/explore/`（带 frontmatter 状态机 `pending-absorb`/`absorbed`）：speckit.prd 与 speckit.milestones init 会自动扫描、通读并吸收为愿景素材，吸收后回写去向——前期深挖的结论不会随换环节失联，且全程可溯源；领航提醒块会在每次回复里提示待吸收数量。
 
 ## 配置项
 
@@ -159,6 +159,7 @@ flowchart TD
 | 功能愿景来源 | `speckit.milestones init` 时指定（`--vision <路径>` 或询问） | 询问；缺失可先用 speckit.prd 生成 |
 | UX 基线路径 | `.specify/memory/milestones.md` §一 `ux_baseline` | `docs/ux-baseline/`（用 ux-baseline-template 建立） |
 | 分析报告输出目录 | constitution 中可改配 | `./.prepare/docs/specs-analysis-repo/` |
+| 前期探索登记处 | 固定约定（grill/brainstorm 写入，prd/milestones 吸收） | `docs/explore/` |
 | AGENTS.md 提醒块 | `/speckit.setup`（inject/remove/status） | 项目根 `AGENTS.md`，标记块幂等注入 |
 
 ## 文件清单
@@ -181,7 +182,7 @@ flowchart TD
 │   ├── speckit.hotfix.md           bug 修复双路径
 │   ├── speckit.grill.md            （旁路）设计树拷问式深挖，任意环节可用
 │   └── speckit.brainstorm.md       （旁路）对话式头脑风暴 → 批准后路由回主线
-└── templates/                      9 个模板
+└── templates/                      10 个模板
     ├── milestones-template.md      里程碑规划（优先级/用户旅程/依赖 DAG）
     ├── prototype-template.md       UI Demo 说明清单（SCR-nn 屏清单）
     ├── ux-baseline-template.md     UX 设计基线（设计令牌/组件约定）
@@ -189,6 +190,7 @@ flowchart TD
     ├── analysis-report-template.md 分析报告（轮次追加）
     ├── implementation-report-template.md  实现与验收报告
     ├── prd-template.md             PRD（可选）
+    ├── explore-note-template.md    前期探索登记文件（frontmatter 吸收状态机）
     └── brainstorming/              speckit.brainstorm 配套资源
         ├── builder-check-prompt.md 设计文档建造者盲审提示词
         ├── visual-companion.md     浏览器可视化伴侣指南

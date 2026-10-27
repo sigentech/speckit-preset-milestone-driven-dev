@@ -2,6 +2,15 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [1.5.0] - 2026-10-27
+
+### Added
+- **前期探索产出自动吸收机制**：新增约定目录 `docs/explore/` 与新模板 `explore-note-template`。用户在宪法/PRD/里程碑规划之前调用 `/speckit.grill`、`/speckit.brainstorm` 时，产出统一落盘为该目录下带 frontmatter 状态机（`pending-absorb`/`absorbed`）的登记文件；`speckit.prd` 与 `speckit.milestones init` 执行时自动扫描、通读待吸收文件作为愿景素材，吸收后回写状态与吸收去向——前期深挖/头脑风暴的结论不会因换环节而失联，且全程可溯源
+- AGENTS.md 领航提醒块升级至 v1.5.0：检测到 `docs/explore/` 有待吸收文件时主动提示数量，并提醒在进入 constitution/prd/milestones 环节时优先参考
+
+### Fixed
+- 修正 v1.4.0 中 grill/brainstorm 落点表的两处错误：项目前期阶段原先"不直接写文件"（共识会随对话散失），现统一落 `docs/explore/`；PRD 实际路径由 `docs/prd.md` 更正为 `.specify/memory/prd.md`
+
 ## [1.4.0] - 2026-10-27
 
 ### Added

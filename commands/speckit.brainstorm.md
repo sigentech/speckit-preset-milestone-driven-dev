@@ -102,7 +102,7 @@ $ARGUMENTS
 **文档落点（必须与调用时所在环节吻合，见"结论沉淀"表）**：
 
 - 当前 spec 已存在 → `specs/NNN-mX-短名/design/YYYY-MM-DD-<主题>-design.md`，随 docs 提交
-- 尚无当前 spec（项目级探讨：宪法/PRD/里程碑规划之前或之中）→ `docs/design/YYYY-MM-DD-<主题>-design.md`，随 docs 提交
+- 尚无当前 spec（项目级探讨：宪法/PRD/里程碑规划之前或之中）→ `docs/explore/YYYY-MM-DD-<主题>-design.md`，frontmatter 置 `status: pending-absorb`（头部格式从 `explore-note-template` 生成，用 `specify preset resolve explore-note-template` 定位）。该目录是下游命令的**自动吸收源**：`speckit.prd`、`speckit.milestones init` 执行时会扫描其中待吸收文件作为愿景素材，吸收后回写状态——设计文档不会因换环节而失联
 - 用户另有偏好从其偏好
 
 **建造者检查**（完整版设计文档）：文档写好后，派一个全新的通用子代理，提示词见模板——用 `specify preset resolve brainstorm-builder-check-prompt` 定位（通常为 `.specify/presets/milestone-driven-dev/templates/brainstorming/builder-check-prompt.md`），填入领域与文档路径。告诉用户"写好了，但会有一位评审先读，我可能带着几个问题回来一次"。检查回来之前不交文档。把评审的问题分三堆：
@@ -140,8 +140,8 @@ $ARGUMENTS
 
 | 调用时环节（证据） | 结论落点 |
 | --- | --- |
-| 无 constitution.md | 作为 `/speckit.constitution` 输入，不直接写文件 |
-| 无 milestones.md | `docs/prd.md` 或作为 `/speckit.milestones init` 输入 |
+| 无 constitution.md | `docs/explore/` 登记（pending-absorb）；立宪法访谈时自动参考 |
+| 无 milestones.md | `docs/explore/` 登记（pending-absorb）；`speckit.prd` / `speckit.milestones init` 自动吸收 |
 | prototype 未冻结未 skip | 就地修订 Demo + `prototype.md` 迭代记录 |
 | spec.md 阶段 | 经 `/speckit.clarify` 口径写入 spec.md |
 | plan.md 阶段 | plan.md 技术决策小节 |

@@ -46,12 +46,14 @@ $ARGUMENTS
 
 ## 结论沉淀：落点必须与调用时所在环节吻合
 
-达成共识后，把敲定的结论写入**当前环节对应的正式产物**，不另起游离文件：
+达成共识后，把敲定的结论写入**当前环节对应的正式产物**，不另起游离文件。
+
+**项目前期（尚无正式产物可承接时）统一落"探索登记处"**：宪法/PRD/里程碑规划尚未完成的阶段，结论写入 `docs/explore/YYYY-MM-DD-<主题>-grill.md`（从 `explore-note-template` 生成，用 `specify preset resolve explore-note-template` 定位），frontmatter 置 `status: pending-absorb`。该目录是下游命令的**自动吸收源**：`speckit.prd`、`speckit.milestones init` 执行时会扫描其中待吸收文件作为愿景素材，吸收后回写状态——无需用户手工搬运。
 
 | 调用时环节（证据） | 结论落点 |
 | --- | --- |
-| 无 `.specify/memory/constitution.md` | 不直接写文件；结论作为 `/speckit.constitution` 的输入口径 |
-| 无 `.specify/memory/milestones.md` | 启用过 PRD 的项目写入 `docs/prd.md`；否则作为 `/speckit.milestones init` 的输入 |
+| 无 `.specify/memory/constitution.md` | `docs/explore/` 登记（pending-absorb）；立宪法访谈时自动参考 |
+| 无 `.specify/memory/milestones.md` | `docs/explore/` 登记（pending-absorb）；`speckit.prd` / `speckit.milestones init` 自动吸收 |
 | 当前 spec 的 prototype 未冻结未 skip | 就地修订 Demo，并在 `prototype.md` 迭代记录追加一行（日期/共识/改动） |
 | spec.md 撰写/消歧阶段 | 走 `/speckit.clarify` 口径写入 `spec.md`（作为澄清记录落笔） |
 | plan.md 阶段 | 写入 `plan.md` 技术决策相关小节 |
