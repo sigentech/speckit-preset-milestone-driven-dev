@@ -22,7 +22,8 @@ $ARGUMENTS
 ## 执行算法
 
 1. **加载并校验报告**：读取 `./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md` 的最新轮次，取得全部“未消除”问题及其问题 ID、稳定问题键、严重级、修复入口命令、具体修改建议和验证判据。
-   - 若“修复入口命令”缺失或包含多个命令，停止并提示重跑 `speckit.analyze`，不得自行猜测路由。
+   - 若“修复入口命令”不是恰好 `speckit.clarify`、`speckit.plan`、`speckit.tasks` 中的一个（包括缺失、多个或未知命令），停止处理并请求用户重跑 `speckit.analyze`；不得自行映射或忽略该问题。
+   - 只有全部未消除问题都通过上述唯一入口校验后，才可开始阶段循环。
    - 若没有未消除问题，提示直接重跑 analyze 或进入 `speckit.implement`，退出。
    - 仅处理下列三个修复入口：`speckit.clarify`、`speckit.plan`、`speckit.tasks`。
 

@@ -32,3 +32,9 @@ class PresetContractTests(unittest.TestCase):
         self.assertIn("按 Critical → High → Medium → Low", text)
         self.assertIn("回到最早受影响阶段", text)
         self.assertIn("同一稳定问题键连续两轮", text)
+        self.assertIn(
+            "不是恰好 `speckit.clarify`、`speckit.plan`、`speckit.tasks` 中的一个",
+            text,
+        )
+        self.assertIn("请求用户重跑 `speckit.analyze`", text)
+        self.assertIn("不得自行映射或忽略该问题", text)
