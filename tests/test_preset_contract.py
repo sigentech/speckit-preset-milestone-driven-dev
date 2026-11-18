@@ -124,3 +124,53 @@ class PresetContractTests(unittest.TestCase):
             self.assertIn("预期非零成功契约", acceptance)
             self.assertNotIn("[0 或其他]", template)
             self.assertIn("AI_PASS 成功证据", implementation_report)
+
+    def test_workflow_hands_off_through_converge(self):
+        implement = self.read("commands/speckit.implement.md")
+        acceptance = self.read("commands/speckit.acceptance.md")
+        navigator = self.read("templates/agents-reminder-template.md")
+
+        self.assertIn("agent: speckit.converge", implement)
+        self.assertNotIn("agent: speckit.acceptance", implement)
+        self.assertIn("Agent 可执行", implement)
+        self.assertIn("需人工", implement)
+        self.assertIn("./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md", implement)
+        self.assertNotIn(".prepare", implement)
+        self.assertIn("追加任务", implement)
+        self.assertIn("回到 `speckit.implement`", implement)
+        self.assertIn("仍然运行 `speckit.converge`", implement)
+        self.assertLess(
+            implement.index("agent: speckit.converge"),
+            implement.index("/speckit.simulate-acceptance"),
+        )
+        self.assertLess(
+            implement.index("/speckit.simulate-acceptance"),
+            implement.index("/speckit.acceptance"),
+        )
+
+        self.assertIn("speckit.converge", acceptance)
+        self.assertIn("无法确认", acceptance)
+        self.assertIn("先运行 `/speckit.converge`", acceptance)
+        self.assertIn("不得生成验收报告", acceptance)
+        self.assertLess(
+            acceptance.index("/speckit.converge"),
+            acceptance.index("/speckit.simulate-acceptance"),
+        )
+        self.assertLess(
+            acceptance.index("/speckit.simulate-acceptance"),
+            acceptance.index("/speckit.acceptance"),
+        )
+
+        self.assertIn("speckit-preset:milestone-driven-dev v1.6.0", navigator)
+        self.assertIn("/speckit.converge", navigator)
+        self.assertIn("/speckit.simulate-acceptance", navigator)
+        self.assertIn("需人工", navigator)
+        self.assertLess(navigator.index("/speckit.converge"), navigator.index("/speckit.simulate-acceptance"))
+        self.assertLess(
+            navigator.index("/speckit.simulate-acceptance"),
+            navigator.index("/speckit.acceptance"),
+        )
+        self.assertFalse(
+            (self.repo_root / "commands/speckit.converge.md").exists(),
+            "the preset must reuse core speckit.converge",
+        )

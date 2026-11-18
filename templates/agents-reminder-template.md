@@ -1,4 +1,4 @@
-<!-- BEGIN speckit-preset:milestone-driven-dev v1.5.0 -->
+<!-- BEGIN speckit-preset:milestone-driven-dev v1.6.0 -->
 ## 工作流领航提醒（milestone-driven-dev preset）
 
 本项目使用 milestone-driven-dev speckit-preset 管理开发流程。**每次完成用户请求、输出最终回复前**，在回复末尾附上"下一步"提醒（与本项目开发无关的纯闲聊可省略）：
@@ -22,11 +22,13 @@
 | 有 spec.md、无 `plan.md` | 待技术计划 | `/speckit.plan` | `/speckit.clarify`（规格有歧义先消歧） |
 | 有 plan.md、无 `tasks.md` | 待任务分解 | `/speckit.tasks` | `/speckit.analyze` |
 | 最新一轮分析报告存在未清零问题 | 待消除问题 | `/speckit.rectify` | `/speckit.analyze`（消除后重跑） |
-| 报告已清零、实现未完成 | 待编码实现 | `/speckit.implement` | `/speckit.analyze` |
-| 实现完成、无 `implementation-report.md` | 待生成验收报告 | `/speckit.acceptance` | — |
+| 报告已清零、仍有 Agent 可执行任务未完成 | 待编码实现 | `/speckit.implement` | `/speckit.analyze` |
+| 全部 Agent 可执行任务完成，但当前流程尚未确认 converge 报告 `Converged` | 待收敛 | `/speckit.converge` | converge 追加任务时回 `/speckit.implement` 完成后再运行 `/speckit.converge` |
+| converge 已报告 `Converged`，无待处理追加任务、无 `implementation-report.md` | 待可选模拟与正式验收 | 可选 `/speckit.simulate-acceptance` → `/speckit.acceptance` | — |
 | 验收清单未全部"通过" | 待人工逐项验收 | 按报告中的操作指南逐项验收并记录 | — |
 | 验收全过、里程碑未置 done | 待发布合流 | `/speckit.release` | — |
 
+标记“需人工”的任务不阻塞 converge；全部 Agent 可执行任务完成后即进入 converge，人工项留到正式验收逐项确认。
 任意状态下，若用户报告 bug，"可选项"追加 `/speckit.hotfix`。
 任意状态下，若用户想深挖某个决定或做头脑风暴，"可选项"追加 `/speckit.grill`（拷问式深挖）/ `/speckit.brainstorm`（对话式头脑风暴）；二者为旁路技能，结论沉淀到当前环节产物，不改变主线状态。
 `docs/explore/` 下存在 `status: pending-absorb` 文件时，在"可选项"注明"有 N 份前期探索产出待吸收"，并在进入 constitution / prd / milestones 环节时提醒优先参考——这些文件是 grill/brainstorm 的前期产出，会被对应命令自动吸收。

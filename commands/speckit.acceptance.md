@@ -12,6 +12,8 @@ handoffs:
 
 可选的 `speckit.simulate-acceptance` 可以预填有当前证据的 `AI_PASS` 项并复制人工指南；正式验收必须重新校验模拟 `baseline`，不能把模拟当成最终验收。
 
+必须遵守命令顺序：`/speckit.implement` → `/speckit.converge` → 可选 `/speckit.simulate-acceptance` → `/speckit.acceptance`。
+
 ## 用户输入
 
 ~~~text
@@ -23,9 +25,10 @@ $ARGUMENTS
 ## 执行步骤
 
 1. **前置检查**
-   - `tasks.md` 中全部 Agent 可执行任务已勾选；当前分支为 `feature/Mx`。
-   - 当前会话最近一次 `speckit.converge` 必须明确报告 `Converged`。无法确认时停止，要求先运行 `/speckit.converge`。
-   - 若 converge 追加了任务或仍要求回到 `speckit.implement`，停止验收；完成任务并重新 converge 后再进入本步骤。
+   - `tasks.md` 中全部 Agent 可执行任务已勾选；标记“需人工”的任务由用户完成，不要求 Agent 代为完成，但必须保留为正式验收中的待验项。当前分支为 `feature/Mx`。
+   - 正式验收要求当前会话最近一次 `speckit.converge` 明确报告 `Converged`。无法确认该结果时停止，不得生成验收报告，要求先运行 `/speckit.converge`。
+   - 若 converge 追加了任务或仍要求回到 `speckit.implement`，停止验收；完成任务并重新 converge 到 `Converged` 后再进入本步骤。
+   - 只有确认 `Converged` 且没有待处理追加任务后，才可校验可选的 `speckit.simulate-acceptance`；模拟不能替代正式验收。
 
 2. **校验可选验收模拟**
    - 查找 `specs/[NNN-mX-slug]/acceptance-simulation.md`。
@@ -63,6 +66,7 @@ $ARGUMENTS
 7. **写入报告**
    - 从 `templates/implementation-report-template.md` 生成 `specs/[NNN-mX-短名]/implementation-report.md`。
    - 记录验收模拟来源、模拟 `baseline`、baseline 是否当前有效、导入的证据与全人工回退原因。
+   - 将 `.specify/memory/milestones.md` 中本里程碑状态从 `in-progress` 更新为 `acceptance`。
 
 8. **提交并推送（向用户说明后执行）**
    ~~~bash
