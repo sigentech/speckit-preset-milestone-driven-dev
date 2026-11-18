@@ -38,3 +38,58 @@ class PresetContractTests(unittest.TestCase):
         )
         self.assertIn("请求用户重跑 `speckit.analyze`", text)
         self.assertIn("不得自行映射或忽略该问题", text)
+
+    def test_acceptance_simulation_contract(self):
+        command_path = self.repo_root / "commands/speckit.simulate-acceptance.md"
+        template_path = self.repo_root / "templates/acceptance-simulation-template.md"
+        self.assertTrue(command_path.is_file(), "acceptance simulation command is missing")
+        self.assertTrue(template_path.is_file(), "acceptance simulation template is missing")
+
+        command = self.read("commands/speckit.simulate-acceptance.md")
+        template = self.read("templates/acceptance-simulation-template.md")
+        acceptance = self.read("commands/speckit.acceptance.md")
+        implementation_report = self.read("templates/implementation-report-template.md")
+
+        for status in ("AI_PASS", "AI_FAIL", "HUMAN_REQUIRED", "BLOCKED"):
+            self.assertIn(status, command)
+            self.assertIn(status, template)
+        for field in ("前置条件", "操作步骤", "预期结果", "判定标准", "记录位置"):
+            self.assertIn(field, template)
+
+        self.assertIn("specs/[NNN-mX-slug]/acceptance-simulation.md", command)
+        self.assertIn("Converged", command)
+        self.assertIn("不得伪造", command)
+        self.assertIn("实际执行", command)
+        for route in ("speckit.clarify", "speckit.plan", "speckit.tasks", "speckit.implement"):
+            self.assertIn(route, command)
+        for section in ("基线", "汇总", "全部验收项结果", "AI_PASS 明细", "AI_FAIL 明细", "人工待验", "结论"):
+            self.assertIn(section, template)
+        for field in (
+            "验收目标",
+            "前置条件与环境",
+            "测试数据/输入",
+            "可观察的预期结果",
+            "通过/不通过/阻塞",
+            "为什么 Agent 不能可靠完成",
+        ):
+            self.assertIn(field, template)
+
+        self.assertIn("speckit.converge", acceptance)
+        self.assertIn("Converged", acceptance)
+        self.assertIn("acceptance-simulation.md", acceptance)
+        self.assertIn("AI_PASS", acceptance)
+        self.assertIn("AI_FAIL", acceptance)
+        self.assertIn("baseline", acceptance)
+        self.assertIn("过期", acceptance)
+        self.assertIn("全人工验收", acceptance)
+        self.assertIn("不得生成", acceptance)
+        self.assertIn("即使 baseline 已过期", acceptance)
+        self.assertIn("状态数量", acceptance)
+        self.assertIn("结论与逐项状态一致", acceptance)
+
+        for field in ("验收状态", "证据", "模拟结果来源", "模拟 baseline", "人工指南"):
+            self.assertIn(field, implementation_report)
+        self.assertIn(
+            "./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md",
+            implementation_report,
+        )
