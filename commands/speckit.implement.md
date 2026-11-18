@@ -14,8 +14,9 @@ handoffs:
 ## 前置门禁
 
 1. 当前分支为 `feature/Mx` 且与 spec 目录的里程碑号一致；不一致则停止并提示切换。
-2. `./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md` 最新状态为"已清零"；否则停止并提示先走 `speckit.rectify` → `speckit.analyze`。
-3. 工作区无未提交的非本里程碑改动（防串味；有则提示先提交或 stash）。
+2. 按唯一规则解析分析报告路径：读取 `.specify/memory/constitution.md`；存在唯一一行 `analysis_report_dir: <path>` 时使用该目录，否则使用 `./.auxiliary/docs/specs-analysis-repo/`；文件名固定为 `[spec-dir]-analysis.md`。重复、空或不可解析的路径登记必须停止并要求修正 constitution。
+3. 解析后的分析报告最新状态为"已清零"；否则停止并提示先走 `speckit.rectify` → `speckit.analyze`。
+4. 工作区无未提交的非本里程碑改动（防串味；有则提示先提交或 stash）。
 
 ## 执行中的定制要求
 

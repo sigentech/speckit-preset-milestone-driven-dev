@@ -15,10 +15,13 @@
 - preset 版本必须为 `1.6.0`。
 - `requires.speckit_version` 必须为 `>=1.0.9`。
 - 不新增 `commands/speckit.converge.md`，直接复用核心 converge。
-- 分析报告默认目录必须为 `./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md`。
+- 分析报告目录使用唯一规则：constitution 存在唯一一行 `analysis_report_dir: <path>` 时使用该目录，否则使用 `./.auxiliary/docs/specs-analysis-repo/`；文件名固定为 `[spec-dir]-analysis.md`。重复、空或不可解析的登记必须停止。
 - analyze 的每条修复入口只能是一个：`speckit.clarify`、`speckit.plan`、`speckit.tasks`。
 - rectify 顺序固定为 clarify 阶段 -> plan 阶段 -> tasks 阶段；下游引入上游问题时必须回退。
 - simulate-acceptance 是验收前可选命令，状态固定为 `AI_PASS`、`AI_FAIL`、`HUMAN_REQUIRED`、`BLOCKED`。
+- 每个模拟来源行同时记录稳定来源键和 `判据指纹: sha256:<hex>`；判据指纹使用 NFC、LF、去首尾空白、折叠内部空白后的 UTF-8 SHA-256。
+- acceptance 必须独立认证来源键和判据指纹；任一文本缺失、替换、不可解析或指纹不匹配时，整个模拟回退全人工验收。
+- 正式验证前建立 HEAD、工作区状态和 spec/plan/tasks 指纹快照，验证后、报告写入前复检；任一变化停止报告并要求重新 converge。
 - Agent 不得伪造运行结果、截图、外部系统状态或人工体验结论。
 - 所有改动同步英文 `README.md` 与中文 `README.zh-CN.md`。
 - commands 数量为 15，templates 数量为 11。
@@ -365,6 +368,23 @@ Expected: PASS。
 git add preset.yml README.md README.zh-CN.md CHANGELOG.md templates/implementation-report-template.md commands/speckit.implement.md docs/research/2026-11-18-speckit-converge.md tests/test_preset_contract.py
 git commit -m "docs: release preset 1.6 workflow"
 ```
+
+---
+
+### Final Review Correction Wave
+
+**Interfaces:**
+- Consumes: final whole-branch review findings and the controller ruling dated 2026-11-18.
+- Produces: criterion-fingerprint authentication, one report-directory resolution rule, synchronized twelve-stage tables, and verified pre/post formal-verification snapshots.
+
+- [x] Add RED contracts for correct-key/altered-criterion rejection, malformed fingerprints, shared `analysis_report_dir: <path>` parsing, twelve command stages, acceptance snapshot ordering, and navigator evidence scope.
+- [x] Fix source authentication so every simulation row carries `判据指纹: sha256:<hex>` and acceptance independently extracts, canonicalizes, and fingerprints current criterion text before importing any simulation result.
+- [x] Preserve `AI_FAIL` precedence even when the simulation baseline is stale; invalid criterion authentication otherwise falls back to full manual acceptance.
+- [x] Apply the report-directory resolver to analyze, rectify, implement, acceptance, templates, README EN/ZH, manifest metadata, and research/configuration text.
+- [x] Remove the numbered branch row, retain it as an unnumbered action, and number the twelve command stages through prototype, specify, clarify, plan, tasks, analyze, rectify, implement, converge, optional simulate-acceptance, acceptance, and release.
+- [x] Require pre-verification and post-verification snapshots of HEAD, full porcelain status, and spec/plan/tasks SHA-256 fingerprints; any difference stops formal report and milestone writes and requires another converge.
+- [x] Clarify simulation rerun lifecycle for an uncommitted existing `implementation-report.md`: commit or remove it, then rerun; only the target simulation report may be the otherwise-clean baseline exception.
+- [x] Run focused tests, full unittest discovery, alias scan, manifest checks, isolated CLI smoke, and `git diff --check`.
 
 ### Task 6: 全量验证与安装冒烟
 

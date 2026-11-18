@@ -66,7 +66,13 @@ analyze/rectify 清零
 ./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md
 ```
 
-`.auxiliary` 是默认目录，不是强制唯一目录；现有 constitution 自定义路径机制保留。所有 preset 内建引用使用新默认值，命令运行时仍以 constitution 登记路径为准。
+`.auxiliary` 是默认目录，不是强制唯一目录。所有命令、模板和文档使用同一条机器可读解析规则：
+
+1. 在 constitution 中查找唯一一行 `analysis_report_dir: <path>`。
+2. 存在时使用 `<path>` 作为分析报告目录，路径相对项目根解析。
+3. 不存在时使用默认目录 `./.auxiliary/docs/specs-analysis-repo/`。
+4. 报告文件名固定为 `[spec-dir]-analysis.md`，完整路径为 `<analysis-report-dir>/[spec-dir]-analysis.md`。
+5. 重复键、空路径、含通配符或无法唯一解析的登记必须停止流程，不得猜测自定义路径。
 
 验收条件：仓库中不再存在旧目录名的引用。历史 changelog 也直接使用统一后的名称，并在 `1.6.0` 记录本轮目录迁移。preset 不自动移动用户项目中的既有报告；中文和英文 README 的升级说明要求曾固定旧默认路径的项目同步修改 constitution 和目录。
 
@@ -218,7 +224,7 @@ specs/[NNN-mX-slug]/acceptance-simulation.md
 
 1. 基线：分支、commit、spec/plan/tasks 摘要指纹、converge 结果、生成日期。
 2. 汇总：验收项总数、`AI_PASS`、`AI_FAIL`、`HUMAN_REQUIRED`、`BLOCKED` 数量。
-3. 全部验收项结果表：编号、来源、验收判据、状态、证据、置信度、后续动作。
+3. 全部验收项结果表：编号、稳定来源键、判据指纹、来源、验收判据、状态、证据、置信度、后续动作。
 4. `AI_PASS` 明细：实际执行的命令/检查、关键输出、证据路径。
 5. `AI_FAIL` 明细：失败现象、证据、问题根因路由（`speckit.clarify` / `speckit.plan` / `speckit.tasks` / implement）。
 6. 人工待验区：每个 `HUMAN_REQUIRED`/`BLOCKED` 项必须独立成节，包含：
@@ -232,14 +238,20 @@ specs/[NNN-mX-slug]/acceptance-simulation.md
    - 为什么 Agent 不能可靠完成。
 7. 结论：`ready-for-acceptance`、`needs-implementation` 或 `needs-user-input`。
 
+每个来源条目必须同时记录稳定来源键和 `判据指纹: sha256:<hex>`。判据指纹固定使用 SHA-256：先对当前来源的完整验收判据正文做 Unicode NFC 规范化，将行尾统一为 LF，去掉首尾空白，把内部连续空白折叠为一个空格，再以 UTF-8 编码规范文本并计算 SHA-256，输出 64 位小写十六进制。
+
 ### 8.4 acceptance 集成
 
 - 若 `acceptance-simulation.md` 存在且 baseline 与当前代码/产物一致：
   - `AI_PASS` 项直接预填 implementation report 的验收结果并引用证据；
   - `HUMAN_REQUIRED`/`BLOCKED` 项保持“待验收”，复制逐项操作指南；
   - 存在 `AI_FAIL` 时禁止生成正式验收报告。
+- 正式 acceptance 必须从当前每个来源条目独立提取验收判据正文，按同一算法重新计算判据指纹，并要求模拟来源行的来源键和判据指纹都精确匹配。仅验证稳定来源键不足以证明被验收的事实未被替换。
+- 判据文本缺失、被替换、同键解析出多段、无法解析或任一判据指纹不匹配时，整个模拟失效并退回全人工验收，不得导入任何 `AI_PASS`；`AI_FAIL` 仍按失败优先处理。
+- 先扫描可见 `AI_FAIL`。只要存在 `AI_FAIL`，即使 baseline 已过期，也阻止正式验收并路由到唯一上游命令。
 - 若模拟报告缺失或已过期，acceptance 按现有流程生成全部待人工验收项，并可提示用户先运行模拟命令。
 - 模拟不能降低安全门槛：凭证缺失、真实支付、生产数据、破坏性操作、真实设备、无障碍真人体验等默认留给用户。
+- 正式验证前必须存档验收判据指纹，并建立包含 HEAD、`git status --porcelain=v1 --untracked-files=all` 和 spec/plan/tasks SHA-256 指纹的快照。验证命令执行后、写报告或更新里程碑前，必须逐项复检同一快照；任一项变化都证明仓库或验收意图被验证过程改变，模拟失效，停止报告生成并要求重新 converge。
 
 ### 8.5 编排与回退
 
@@ -255,6 +267,8 @@ Converged
 ```
 
 若所有项目均为 `AI_PASS`，acceptance 报告中人工待验项为零，但仍保留最终 release 的人工确认。
+
+`AI_FAIL` 是独立失败信号：即使 baseline 已过期、格式不完整或其余结果不能导入，可见的 `AI_FAIL` 仍然最先阻止 acceptance。
 
 ## 9. 版本与发布元数据
 
@@ -309,6 +323,8 @@ Converged
 7. 检查英文与中文 README 的流程、命令顺序、路径和版本信息一致。
 8. 检查 Mermaid 节点没有孤立步骤，converge 回环和 acceptance 分流清楚。
 9. 检查验收模拟模板的每个 `HUMAN_REQUIRED`/`BLOCKED` 项都有完整操作步骤、预期结果、判定标准和记录位置。
+10. 使用固定文本夹具验证正确来源键 + 被替换判据或错误指纹会被拒绝，并覆盖缺失、非十六进制和大小写不合规的指纹。
+11. 检查 acceptance 在验证前建立快照，在验证后、报告/里程碑写入前复检 HEAD、工作区状态和 spec/plan/tasks 指纹。
 
 ## 13. 已知限制
 

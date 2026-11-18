@@ -6,17 +6,17 @@
 
 ### Added
 - 新增可选命令 `speckit.simulate-acceptance` 与模板 `acceptance-simulation-template`：在核心 converge 报告 `Converged` 后，以实际执行证据逐项给出 `AI_PASS`、`AI_FAIL`、`HUMAN_REQUIRED`、`BLOCKED` 状态；无法可靠模拟的项目附完整人工验收指南
-- 新增验收模拟 baseline 与来源覆盖合同：记录 commit、spec/plan/tasks 指纹和工作区清洁状态，核对期望来源键恰好一次；缺失、无效或过期时退回全人工验收，存在 `AI_FAIL` 时禁止生成正式验收报告
+- 新增验收模拟 baseline、来源覆盖与判据认证合同：记录 commit、spec/plan/tasks 指纹和工作区清洁状态；每个来源行同时记录稳定来源键与 `判据指纹: sha256:<hex>`，正式验收独立提取当前判据并按 NFC/LF/去首尾空白/折叠内部空白的 UTF-8 SHA-256 算法重算。缺失、替换、不可解析或不匹配时整个模拟退回全人工验收，可见 `AI_FAIL` 即使 baseline 过期也禁止生成正式验收报告
 - AGENTS.md 领航提醒块升级至 v1.6.0：加入实现后 converge、可选模拟验收和正式验收顺序，并优先提示模拟失败的唯一根因路由
 
 ### Changed
 - preset 升级至 `1.6.0`，最低 spec-kit 版本提升至 `>=1.0.9`，确保 converge 的完成性判定语义可用；直接复用核心 `speckit.converge`，不新增或覆盖本地命令
-- 分析报告默认目录统一为 `./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md`。这是默认位置的目录迁移；既有项目若在 constitution 中固定了旧路径，需要同步配置并迁移历史报告
+- 分析报告目录统一使用唯一规则：constitution 存在唯一一行 `analysis_report_dir: <path>` 时使用该目录，否则使用默认 `./.auxiliary/docs/specs-analysis-repo/`，文件名固定为 `[spec-dir]-analysis.md`。重复、空或不可解析的登记会停止流程；既有项目若在 constitution 中固定了旧路径，需要同步配置并迁移历史报告
 - `speckit.analyze` 升级为四级问题卡合同：每条问题记录稳定问题键、证据、影响、具体修改建议、验证判据与唯一修复入口，跨层问题只路由到最上游的 clarify/plan/tasks
 - `speckit.rectify` 升级为 clarify → plan → tasks 三阶段循环；任一阶段重新引入上游问题即回退到最早受影响阶段，同一稳定问题键连续两轮未消则停下请用户裁决
 - `speckit.implement` 完成后交接核心 converge；追加任务回到 implement，只有 `Converged` 后才允许可选模拟验收与正式验收
-- `speckit.acceptance` 消费当前有效模拟的 `AI_PASS` 与人工指南，同时独立重算来源覆盖并校验 baseline，避免使用过期证据
-- 英文与中文 README 同步更新版本、安装 tag、要求、流程图、十二步里程碑循环、关键规则、配置和文件清单，并清理重复片段
+- `speckit.acceptance` 消费当前有效模拟的 `AI_PASS` 与人工指南，同时独立重算来源覆盖与判据指纹并校验 baseline；正式验证前存档 HEAD、工作区状态和 spec/plan/tasks 指纹快照，验证后、报告/里程碑写入前复检，任一差异停止报告并要求重新 converge
+- 英文与中文 README 同步更新版本、安装 tag、要求、流程图、十二步里程碑循环、关键规则、配置和文件清单；分支动作保持不编号，十二个命令阶段按 prototype → specify → clarify → plan → tasks → analyze → rectify → implement → converge → 可选 simulate-acceptance → acceptance → release 排列
 
 ## [1.5.0] - 2026-10-27
 

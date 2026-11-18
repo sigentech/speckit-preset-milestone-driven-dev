@@ -125,17 +125,18 @@ flowchart TD
 
 | Step | Command | Artifact / Action | Gate |
 | --- | --- | --- | --- |
-| 1 | (branch) | `git checkout -b feature/Mx` (handled inside prototype/specify) | cut from develop |
-| 2 | speckit.prototype | `specs/NNN-mX-slug/prototype/` (HTML demo + prototype.md) | inherits UX baseline; **user-confirmed freeze** after iteration; engine-type may skip |
-| 3 | speckit.specify | `specs/NNN-mX-slug/spec.md` (UI-contract section citing SCR-nn) | demo frozen/degraded; milestone bound; scope within bounds |
-| 4 | speckit.clarify | spec.md disambiguation | zero vague wording |
-| 5 | speckit.plan | plan.md (with demo-screen to component map) | constitution-compliant; no interactions the demo lacks |
-| 6 | speckit.tasks | tasks.md | spec, plan, and tasks aligned |
-| 7 | speckit.analyze | analysis report at `./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md` | four severity sections, issue cards, one repair route per issue |
-| 8 | speckit.rectify | updated spec/plan/tasks plus phased elimination log | clarify → plan → tasks clears Critical~Low; regressions roll back |
-| 9 | speckit.converge | core spec-kit convergence result | appended tasks return to implement; acceptance waits for `Converged` |
-| 10 | speckit.simulate-acceptance (optional) | `specs/NNN-mX-slug/acceptance-simulation.md` | real evidence only; `AI_FAIL` blocks acceptance; stale baseline falls back to manual |
-| 11 | speckit.acceptance | `specs/NNN-mX-slug/implementation-report.md` and push | current code is `Converged`; **user ticks every remaining item** |
+| | (branch) | `git checkout -b feature/Mx` (handled inside prototype/specify) | cut from develop |
+| 1 | speckit.prototype | `specs/NNN-mX-slug/prototype/` (HTML demo + prototype.md) | inherits UX baseline; **user-confirmed freeze** after iteration; engine-type may skip |
+| 2 | speckit.specify | `specs/NNN-mX-slug/spec.md` (UI-contract section citing SCR-nn) | demo frozen/degraded; milestone bound; scope within bounds |
+| 3 | speckit.clarify | spec.md disambiguation | zero vague wording |
+| 4 | speckit.plan | plan.md (with demo-screen to component map) | constitution-compliant; no interactions the demo lacks |
+| 5 | speckit.tasks | tasks.md | spec, plan, and tasks aligned |
+| 6 | speckit.analyze | analysis report at `[analysis_report_dir]/[spec-dir]-analysis.md` | four severity sections, issue cards, one repair route per issue |
+| 7 | speckit.rectify | updated spec/plan/tasks plus phased elimination log | clarify → plan → tasks clears Critical~Low; regressions roll back |
+| 8 | speckit.implement | source, tests, and batched `feat(Mx): …` commits | all Agent-executable tasks complete; hand off to converge for code-to-intent closure |
+| 9 | speckit.converge | core spec-kit convergence result | appended tasks return to implement; repeat implement → converge until `Converged` |
+| 10 | speckit.simulate-acceptance (optional) | `specs/NNN-mX-slug/acceptance-simulation.md` | keys and criterion fingerprints authenticate; `AI_FAIL` blocks acceptance; stale baseline falls back to manual |
+| 11 | speckit.acceptance | `specs/NNN-mX-slug/implementation-report.md` and push | code is `Converged`; pre/post verification snapshots match; **user ticks every remaining item** |
 | 12 | speckit.release | merge develop+main, tag `v0.Mx.0`, push, archive demo, milestone done | every acceptance item "passed" |
 
 **Milestone sizing principles**: one milestone delivers one module; independently acceptable; size S ≤1 week / M 1~3 weeks (L requires a written justification); foundations before upper layers. Detail fields include priority (MoSCoW) and user journey (3~7 steps — prototype screen lists and acceptance items derive from it).
@@ -146,11 +147,11 @@ flowchart TD
 
 **UI demo stage** (speckit.prototype): sits after milestones and before specify; demos use lightweight HTML + mock data (decoupled from the real stack); mid-development UI changes are tiered — visual tweaks change directly (logged in the report) / interaction changes update the demo first, then route through clarify→plan→tasks (changing code first is a violation) / scope changes go to milestones for adjudication; at release, real UI screenshots flow back and the demo is archived as "superseded by implementation".
 
-**Analysis reports and phased rectification**: reports default to `./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md`; keep one report per spec, append each round, and never rewrite history. Every issue is a detailed card with an ID, stable key, evidence, impact, exact artifact section to change, validation criterion, and exactly one repair route: `speckit.clarify`, `speckit.plan`, or `speckit.tasks`. Severity is Critical (blocking) / High (rework) / Medium (risk) / Low (polish), with all four levels cleared. Rectify runs clarify → plan → tasks and returns to the earliest affected stage whenever a downstream edit creates an upstream issue. The same stable key unresolved for two rounds halts the loop for user adjudication.
+**Analysis reports and phased rectification**: resolve the report directory from exactly one constitution line `analysis_report_dir: <path>`; when the line is absent, use `./.auxiliary/docs/specs-analysis-repo/`. The filename is always `[spec-dir]-analysis.md`. Duplicate, empty, or unparsable registrations stop the workflow rather than guessing. Keep one report per spec, append each round, and never rewrite history. Every issue is a detailed card with an ID, stable key, evidence, impact, exact artifact section to change, validation criterion, and exactly one repair route: `speckit.clarify`, `speckit.plan`, or `speckit.tasks`. Severity is Critical (blocking) / High (rework) / Medium (risk) / Low (polish), with all four levels cleared. Rectify runs clarify → plan → tasks and returns to the earliest affected stage whenever a downstream edit creates an upstream issue. The same stable key unresolved for two rounds halts the loop for user adjudication.
 
 **Converge after implementation**: `/speckit.converge` is the core spec-kit command and is not bundled or overridden by this preset. After all Agent-executable tasks are complete, implement hands off to converge. If it appends tasks, return to implement and converge again; only a `Converged` result may proceed to acceptance.
 
-**Optional acceptance simulation**: after `Converged`, `/speckit.simulate-acceptance` may precheck items that can be verified with real commands and evidence. Every item is exactly one of `AI_PASS`, `AI_FAIL`, `HUMAN_REQUIRED`, or `BLOCKED`. Test output, exit codes, screenshots, external state, and human experience must never be fabricated. The simulation records commit and artifact fingerprints plus a clean-worktree baseline; any missing, malformed, or stale baseline falls back to full manual acceptance. `AI_FAIL` blocks formal acceptance.
+**Optional acceptance simulation**: after `Converged`, `/speckit.simulate-acceptance` may precheck items that can be verified with real commands and evidence. Every item is exactly one of `AI_PASS`, `AI_FAIL`, `HUMAN_REQUIRED`, or `BLOCKED`. Test output, exit codes, screenshots, external state, and human experience must never be fabricated. Each source row records its stable key and `判据指纹: sha256:<hex>`, calculated from the current criterion after Unicode NFC normalization, LF line endings, outer trimming, internal-whitespace collapse, and UTF-8 SHA-256. Formal acceptance independently extracts and fingerprints the current criterion; a missing, substituted, unparsable, or mismatched criterion invalidates the whole simulation and falls back to full manual acceptance. The simulation also records commit and artifact fingerprints plus a clean-worktree baseline; any missing, malformed, or stale baseline falls back to full manual acceptance. A visible `AI_FAIL` blocks acceptance even when the baseline is stale.
 
 **DevOps iteration path**: the milestones file is the "planning board" (add/revise + change log); enhancements to a done milestone always become a new milestone — history is never rewritten; plan the next round after each retrospective. Bypassing milestones to run specify directly is forbidden.
 
@@ -166,11 +167,11 @@ flowchart TD
 | --- | --- | --- |
 | Feature-vision source | given at `speckit.milestones init` (`--vision <path>` or asked) | asked; if missing, generate a PRD via speckit.prd |
 | UX baseline path | `.specify/memory/milestones.md` §1 `ux_baseline` | `docs/ux-baseline/` (created from ux-baseline-template) |
-| Analysis-report directory | reconfigurable in the constitution | `./.auxiliary/docs/specs-analysis-repo/` |
+| Analysis-report directory | one constitution line `analysis_report_dir: <path>`; duplicate, empty, or unparsable values stop | `./.auxiliary/docs/specs-analysis-repo/`; filename `[spec-dir]-analysis.md` |
 | Early-exploration registry | fixed convention (grill/brainstorm write; prd/milestones absorb) | `docs/explore/` |
 | AGENTS.md navigator block | `/speckit.setup` (inject/remove/status) | project-root `AGENTS.md`, marker-wrapped idempotent injection |
 
-When upgrading from v1.5.0, the default analysis directory changed. If a project constitution pins the previous default, update that configuration and move existing reports into `.auxiliary/docs/specs-analysis-repo/` so round history remains continuous.
+When upgrading from v1.5.0, the default analysis directory changed. If a project constitution pins the previous default, update its `analysis_report_dir: <path>` line and move existing reports into the selected directory so round history remains continuous.
 
 ## File Inventory
 

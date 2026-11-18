@@ -12,7 +12,7 @@
 
 ### 状态检测表
 
-| 证据（文件系统） | 当前环节 | 主线下一步 | 可选项 |
+| 证据（文件系统/当前会话） | 当前环节 | 主线下一步 | 可选项 |
 | --- | --- | --- | --- |
 | 无 `.specify/memory/constitution.md` | 未立项目宪法 | `/speckit.constitution`（有 explore 素材先通读） | — |
 | 无 `.specify/memory/milestones.md` | 未规划里程碑 | `/speckit.milestones init` | `/speckit.prd`（愿景缺失的全新项目） |

@@ -1,6 +1,7 @@
 # 规格分析报告：specs/[NNN-mX-短名]/
 
-<!-- 路径：./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md
+<!-- 路径解析：读取 constitution；存在唯一一行 `analysis_report_dir: <path>` 时使用 `<path>/[spec-dir]-analysis.md`，
+     否则使用默认 `./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md`。重复、空或不可解析的登记必须停止。
      生成：speckit.analyze（定制版），每 spec 一份，按轮次依次追加，只增不删。
      闭环：speckit.rectify 按本报告消除问题后，在同一轮次下补记"消除结果"。
      铁律：Critical/High/Medium/Low 全部必须立即消除；消除后重跑 analyze 追加新轮次。 -->

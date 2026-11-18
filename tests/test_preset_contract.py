@@ -1,4 +1,7 @@
+import hashlib
+import re
 import unittest
+import unicodedata
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -8,6 +11,61 @@ class PresetContractTests(unittest.TestCase):
 
     def read(self, relative_path):
         return (self.repo_root / relative_path).read_text(encoding="utf-8")
+
+    def markdown_section(self, text, heading):
+        match = re.search(
+            rf"^## {re.escape(heading)}\s*$\n(.*?)(?=^## |\Z)",
+            text,
+            flags=re.MULTILINE | re.DOTALL,
+        )
+        self.assertIsNotNone(match, f"missing markdown section: {heading}")
+        return match.group(1)
+
+    def markdown_table_rows(self, text, heading):
+        section = self.markdown_section(text, heading)
+        rows = []
+        data_started = False
+        for line in section.splitlines():
+            if not line.startswith("|"):
+                continue
+            if line.startswith("| ---"):
+                data_started = True
+                continue
+            if not data_started:
+                continue
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            rows.append(cells)
+        return rows
+
+    @staticmethod
+    def canonicalize_criterion(text):
+        normalized = unicodedata.normalize("NFC", text)
+        normalized = normalized.replace("\r\n", "\n").replace("\r", "\n")
+        normalized = normalized.strip()
+        return re.sub(r"\s+", " ", normalized)
+
+    @classmethod
+    def criterion_fingerprint(cls, text):
+        canonical = cls.canonicalize_criterion(text).encode("utf-8")
+        return "sha256:" + hashlib.sha256(canonical).hexdigest()
+
+    @classmethod
+    def simulation_row_authenticates(
+        cls,
+        source_key,
+        source_text,
+        row_key,
+        row_text,
+        row_fingerprint,
+    ):
+        if not source_key or source_key != row_key or not source_text or not row_text:
+            return False
+        if not re.fullmatch(r"sha256:[0-9a-f]{64}", row_fingerprint or ""):
+            return False
+        return (
+            cls.canonicalize_criterion(source_text) == cls.canonicalize_criterion(row_text)
+            and cls.criterion_fingerprint(source_text) == row_fingerprint
+        )
 
     def legacy_directory_aliases(self):
         return ("." + "prepared", "." + "prepare")
@@ -124,6 +182,25 @@ class PresetContractTests(unittest.TestCase):
             self.assertIn("/speckit.converge", text)
             self.assertIn("/speckit.simulate-acceptance", text)
             self.assertIn(".auxiliary", text)
+            self.assertIn("analysis_report_dir: <path>", text)
+            self.assertIn("[spec-dir]-analysis.md", text)
+
+        acceptance_entry = re.search(
+            r'- type: "command"\s+'
+            r'name: "speckit\.acceptance"\s+'
+            r'file: "[^"]+"\s+'
+            r'description: "([^"]+)"',
+            manifest,
+        )
+        self.assertIsNotNone(acceptance_entry, "acceptance command metadata is missing")
+        acceptance_description = acceptance_entry.group(1)
+        for term in (
+            "converge gate",
+            "simulation import",
+            "stale fallback",
+            "AI_FAIL blocks acceptance",
+        ):
+            self.assertIn(term, acceptance_description)
 
     def test_repository_has_no_legacy_auxiliary_directory_alias(self):
         matches = self.find_legacy_alias_matches()
@@ -146,20 +223,21 @@ class PresetContractTests(unittest.TestCase):
 
     def test_rectify_uses_strict_phase_order_and_regression(self):
         text = self.read("commands/speckit.rectify.md")
-        clarify = text.index("speckit.clarify 阶段")
-        plan = text.index("speckit.plan 阶段")
-        tasks = text.index("speckit.tasks 阶段")
+        algorithm = self.markdown_section(text, "执行算法")
+        clarify = algorithm.index("speckit.clarify 阶段")
+        plan = algorithm.index("speckit.plan 阶段")
+        tasks = algorithm.index("speckit.tasks 阶段")
         self.assertLess(clarify, plan)
         self.assertLess(plan, tasks)
-        self.assertIn("按 Critical → High → Medium → Low", text)
-        self.assertIn("回到最早受影响阶段", text)
-        self.assertIn("同一稳定问题键连续两轮", text)
+        self.assertIn("按 Critical → High → Medium → Low", algorithm)
+        self.assertIn("回到最早受影响阶段", algorithm)
+        self.assertIn("同一稳定问题键连续两轮", algorithm)
         self.assertIn(
             "不是恰好 `speckit.clarify`、`speckit.plan`、`speckit.tasks` 中的一个",
-            text,
+            algorithm,
         )
-        self.assertIn("请求用户重跑 `speckit.analyze`", text)
-        self.assertIn("不得自行映射或忽略该问题", text)
+        self.assertIn("请求用户重跑 `speckit.analyze`", algorithm)
+        self.assertIn("不得自行映射或忽略该问题", algorithm)
 
     def test_acceptance_simulation_contract(self):
         command_path = self.repo_root / "commands/speckit.simulate-acceptance.md"
@@ -247,6 +325,222 @@ class PresetContractTests(unittest.TestCase):
             self.assertNotIn("[0 或其他]", template)
             self.assertIn("AI_PASS 成功证据", implementation_report)
 
+        with self.subTest("criterion fingerprint authentication"):
+            for text in (command, template, acceptance, implementation_report):
+                self.assertIn("判据指纹", text)
+                self.assertIn("sha256:<hex>", text)
+            for text in (command, acceptance):
+                for phrase in (
+                    "Unicode NFC",
+                    "行尾统一为 LF",
+                    "去掉首尾空白",
+                    "内部连续空白折叠为一个空格",
+                    "UTF-8",
+                ):
+                    self.assertIn(phrase, text)
+            self.assertIn("来源键与判据指纹", acceptance)
+            self.assertIn("判据文本缺失、被替换或无法解析", acceptance)
+            self.assertIn("整个模拟失效", acceptance)
+            self.assertIn("即使 baseline 已过期", acceptance)
+
+            source_text = "  Accept the file\r\n  only after validation.  "
+            correct_fingerprint = self.criterion_fingerprint(source_text)
+            source_key = "spec:AC-01"
+            row_key = source_key
+            self.assertEqual(
+                "sha256:20bbd5fabd1a397ffa8e0e316930c4ef2986cd5288ee237c71cfd361698bfa6e",
+                correct_fingerprint,
+            )
+            self.assertTrue(
+                self.simulation_row_authenticates(
+                    source_key,
+                    source_text,
+                    row_key,
+                    "Accept the file only after validation.",
+                    correct_fingerprint,
+                )
+            )
+            self.assertFalse(
+                self.simulation_row_authenticates(
+                    source_key,
+                    source_text,
+                    row_key,
+                    "Accept any file without validation.",
+                    correct_fingerprint,
+                ),
+                "a correct stable key and stale fingerprint must not authenticate altered text",
+            )
+            for malformed_fingerprint in ("", "sha256:", "sha256:not-hex", "sha256:" + "A" * 64):
+                self.assertFalse(
+                    self.simulation_row_authenticates(
+                        source_key,
+                        source_text,
+                        row_key,
+                        "Accept the file only after validation.",
+                        malformed_fingerprint,
+                    )
+                )
+
+        with self.subTest("simulation rerun lifecycle"):
+            self.assertIn("现有 `implementation-report.md`", command)
+            self.assertIn("未提交", command)
+            self.assertIn("提交或移除", command)
+            self.assertIn("重新运行模拟", command)
+
+    def test_analysis_report_directory_resolution_is_shared(self):
+        files = (
+            "commands/speckit.analyze.md",
+            "commands/speckit.rectify.md",
+            "commands/speckit.implement.md",
+            "commands/speckit.acceptance.md",
+            "templates/analysis-report-template.md",
+            "templates/implementation-report-template.md",
+            "preset.yml",
+            "README.md",
+            "README.zh-CN.md",
+            "docs/superpowers/specs/2026-11-18-auxiliary-rectify-converge-design.md",
+            "docs/superpowers/plans/2026-11-18-auxiliary-rectify-converge.md",
+        )
+        default_directory = "./.auxiliary/docs/specs-analysis-repo/"
+
+        for relative_path in files:
+            with self.subTest(path=relative_path):
+                text = self.read(relative_path)
+                self.assertIn("analysis_report_dir: <path>", text)
+                self.assertIn(default_directory, text)
+                self.assertIn("[spec-dir]-analysis.md", text)
+
+        for relative_path in files[:6]:
+            with self.subTest(parser_contract=relative_path):
+                text = self.read(relative_path)
+                self.assertIn("唯一一行", text)
+                self.assertIn("重复", text)
+                self.assertIn("空", text)
+
+    def test_readmes_number_all_twelve_command_stages_in_flow_order(self):
+        expected_commands = [
+            "prototype",
+            "specify",
+            "clarify",
+            "plan",
+            "tasks",
+            "analyze",
+            "rectify",
+            "implement",
+            "converge",
+            "simulate-acceptance (optional)",
+            "acceptance",
+            "release",
+        ]
+
+        for relative_path, heading in (
+            ("README.md", "The Milestone Loop (Twelve Steps per Mx)"),
+            ("README.zh-CN.md", "里程碑开发循环（每个 Mx 的十二步）"),
+        ):
+            with self.subTest(path=relative_path):
+                rows = self.markdown_table_rows(self.read(relative_path), heading)
+                self.assertEqual(13, len(rows), "expected one branch row plus twelve numbered stages")
+                self.assertEqual("", rows[0][0], "the branch action must remain unnumbered")
+                branch_row = " ".join(rows[0]).lower()
+                self.assertTrue(
+                    "branch" in branch_row or "分支" in branch_row,
+                    "the unnumbered row must identify the branch action",
+                )
+                command_rows = rows[1:]
+                self.assertEqual(
+                    [str(index) for index in range(1, 13)],
+                    [row[0] for row in command_rows],
+                )
+                actual_commands = []
+                for row in command_rows:
+                    command = re.sub(r"^speckit\.", "", row[1])
+                    command = command.replace("（可选）", " (optional)")
+                    actual_commands.append(command)
+                self.assertEqual(expected_commands, actual_commands)
+                implement_row = next(row for row in command_rows if row[1] == "speckit.implement")
+                converge_row = next(row for row in command_rows if row[1] == "speckit.converge")
+                self.assertIn("converge", " ".join(implement_row).lower())
+                self.assertIn("implement", " ".join(converge_row).lower())
+
+    def test_acceptance_snapshots_before_and_rechecks_after_verification(self):
+        acceptance = self.read("commands/speckit.acceptance.md")
+        implementation_report = self.read("templates/implementation-report-template.md")
+        steps = self.markdown_section(acceptance, "执行步骤")
+        preconditions = steps.split("2. **校验可选验收模拟**", maxsplit=1)[0]
+
+        for marker in (
+            "正式验收前置检查",
+            "先扫描 `AI_FAIL`",
+            "当前会话最近一次 `speckit.converge`",
+            "来源键与判据指纹",
+            "验证前快照",
+        ):
+            self.assertIn(marker, preconditions)
+        for first, second in (
+            (
+                "当前会话最近一次 `speckit.converge`",
+                "先扫描 `AI_FAIL`",
+            ),
+            (
+                "先扫描 `AI_FAIL`",
+                "来源键与判据指纹",
+            ),
+            (
+                "来源键与判据指纹",
+                "验证前快照",
+            ),
+        ):
+            self.assertLess(preconditions.index(first), preconditions.index(second))
+
+        verification_snapshot = steps.index("验证前快照")
+        run_verification = steps.index("运行或引用自动化验证")
+        post_check = steps.index("验证后复检")
+        write_report = steps.index("写入报告")
+        self.assertLess(verification_snapshot, run_verification)
+        self.assertLess(run_verification, post_check)
+        self.assertLess(post_check, write_report)
+
+        snapshot_section = steps[
+            verification_snapshot:
+            steps.index("3. **采集实现事实**")
+        ]
+        recheck_section = steps[
+            steps.index("5. **验证后复检"):
+            write_report
+        ]
+        for text in (snapshot_section, recheck_section):
+            self.assertIn("`git rev-parse HEAD`", text)
+            self.assertIn("`git status --porcelain=v1 --untracked-files=all`", text)
+            for artifact in ("spec.md", "plan.md", "tasks.md"):
+                self.assertIn(artifact, text)
+            self.assertIn("SHA-256", text)
+        for phrase in ("任一项不同", "模拟失效", "不得写入", "重新 converge"):
+            self.assertIn(phrase, recheck_section)
+        self.assertIn("验证前快照", implementation_report)
+        self.assertIn("验证后复检", implementation_report)
+
+    def test_docs_name_stale_ai_fail_exception_and_navigator_evidence_scope(self):
+        readme_en = self.read("README.md")
+        readme_zh = self.read("README.zh-CN.md")
+        design = self.read(
+            "docs/superpowers/specs/2026-11-18-auxiliary-rectify-converge-design.md"
+        )
+        navigator = self.read("templates/agents-reminder-template.md")
+
+        self.assertIn(
+            "A visible `AI_FAIL` blocks acceptance even when the baseline is stale.",
+            readme_en,
+        )
+        self.assertIn(
+            "只要存在可见的 `AI_FAIL`，即使 baseline 已过期，也阻止验收。",
+            readme_zh,
+        )
+        self.assertIn("存档验收判据指纹", design)
+        self.assertIn("可见的 `AI_FAIL`", design)
+        self.assertIn("即使 baseline 已过期", design)
+        self.assertIn("证据（文件系统/当前会话）", navigator)
+        self.assertNotIn("证据（文件系统）", navigator)
+
     def test_workflow_hands_off_through_converge(self):
         implement = self.read("commands/speckit.implement.md")
         acceptance = self.read("commands/speckit.acceptance.md")
@@ -256,7 +550,9 @@ class PresetContractTests(unittest.TestCase):
         self.assertNotIn("agent: speckit.acceptance", implement)
         self.assertIn("Agent 可执行", implement)
         self.assertIn("需人工", implement)
-        self.assertIn("./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md", implement)
+        self.assertIn("analysis_report_dir: <path>", implement)
+        self.assertIn("./.auxiliary/docs/specs-analysis-repo/", implement)
+        self.assertIn("[spec-dir]-analysis.md", implement)
         for alias in self.legacy_directory_aliases():
             self.assertNotIn(alias, implement)
         self.assertIn("追加任务", implement)
@@ -271,17 +567,19 @@ class PresetContractTests(unittest.TestCase):
             implement.index("/speckit.acceptance"),
         )
 
-        self.assertIn("speckit.converge", acceptance)
-        self.assertIn("无法确认", acceptance)
-        self.assertIn("先运行 `/speckit.converge`", acceptance)
-        self.assertIn("不得生成验收报告", acceptance)
+        acceptance_steps = self.markdown_section(acceptance, "执行步骤")
+        acceptance_preconditions = acceptance_steps.split(
+            "2. **校验可选验收模拟**",
+            maxsplit=1,
+        )[0]
+        self.assertIn("speckit.converge", acceptance_preconditions)
+        self.assertIn("无法确认", acceptance_preconditions)
+        self.assertIn("先运行 `/speckit.converge`", acceptance_preconditions)
+        self.assertIn("不得生成验收报告", acceptance_preconditions)
+        self.assertIn("先扫描 `AI_FAIL`", acceptance_preconditions)
         self.assertLess(
-            acceptance.index("/speckit.converge"),
-            acceptance.index("/speckit.simulate-acceptance"),
-        )
-        self.assertLess(
-            acceptance.index("/speckit.simulate-acceptance"),
-            acceptance.index("/speckit.acceptance"),
+            acceptance_preconditions.index("/speckit.converge"),
+            acceptance_preconditions.index("先扫描 `AI_FAIL`"),
         )
 
         self.assertIn("speckit-preset:milestone-driven-dev v1.6.0", navigator)

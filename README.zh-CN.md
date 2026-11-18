@@ -125,17 +125,18 @@ flowchart TD
 
 | 步 | 命令 | 产物/动作 | 门禁 |
 | --- | --- | --- | --- |
-| 1 | （分支） | `git checkout -b feature/Mx`（prototype/specify 内建处理） | 从 develop 切出 |
-| 2 | speckit.prototype | `specs/NNN-mX-短名/prototype/`（HTML Demo + prototype.md） | 继承 UX 基线；迭代后**用户确认冻结**；引擎型可 skip |
-| 3 | speckit.specify | `specs/NNN-mX-短名/spec.md`（含 UI 契约节引 SCR-nn） | Demo 已冻结/降级；关联里程碑；范围不越界 |
-| 4 | speckit.clarify | spec.md 消歧 | 模糊词清零 |
-| 5 | speckit.plan | plan.md（含 Demo屏到组件映射表） | 宪法合规；无 Demo 没有的交互 |
-| 6 | speckit.tasks | tasks.md | spec、plan、tasks 对齐 |
-| 7 | speckit.analyze | 分析报告：`./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md` | 四级分区、完整问题卡、每条问题唯一修复入口 |
-| 8 | speckit.rectify | 更新 spec/plan/tasks + 阶段化消除记录 | clarify → plan → tasks 清空 Critical~Low；上游回归立即回退 |
-| 9 | speckit.converge | spec-kit 核心收敛结果 | 追加任务则回到 implement；`Converged` 前不得验收 |
-| 10 | speckit.simulate-acceptance（可选） | `specs/NNN-mX-短名/acceptance-simulation.md` | 仅用真实证据；`AI_FAIL` 阻止验收；baseline 过期退回全人工 |
-| 11 | speckit.acceptance | `specs/NNN-mX-短名/implementation-report.md` 并推送远程 | 当前代码已 `Converged`；**用户逐项确认剩余人工项** |
+| | （分支） | `git checkout -b feature/Mx`（prototype/specify 内建处理） | 从 develop 切出 |
+| 1 | speckit.prototype | `specs/NNN-mX-短名/prototype/`（HTML Demo + prototype.md） | 继承 UX 基线；迭代后**用户确认冻结**；引擎型可 skip |
+| 2 | speckit.specify | `specs/NNN-mX-短名/spec.md`（含 UI 契约节引 SCR-nn） | Demo 已冻结/降级；关联里程碑；范围不越界 |
+| 3 | speckit.clarify | spec.md 消歧 | 模糊词清零 |
+| 4 | speckit.plan | plan.md（含 Demo屏到组件映射表） | 宪法合规；无 Demo 没有的交互 |
+| 5 | speckit.tasks | tasks.md | spec、plan、tasks 对齐 |
+| 6 | speckit.analyze | 分析报告：`[analysis_report_dir]/[spec-dir]-analysis.md` | 四级分区、完整问题卡、每条问题唯一修复入口 |
+| 7 | speckit.rectify | 更新 spec/plan/tasks + 阶段化消除记录 | clarify → plan → tasks 清空 Critical~Low；上游回归立即回退 |
+| 8 | speckit.implement | 源码、测试与分批 `feat(Mx): …` 提交 | 全部 Agent 可执行任务完成；交给 converge 做代码到意图闭合 |
+| 9 | speckit.converge | spec-kit 核心收敛结果 | 追加任务则回到 implement；循环 implement → converge 直到 `Converged` |
+| 10 | speckit.simulate-acceptance（可选） | `specs/NNN-mX-短名/acceptance-simulation.md` | 来源键与判据指纹均认证；`AI_FAIL` 阻止验收；baseline 过期退回全人工 |
+| 11 | speckit.acceptance | `specs/NNN-mX-短名/implementation-report.md` 并推送远程 | 代码已 `Converged`；验证前后快照一致；**用户逐项确认剩余人工项** |
 | 12 | speckit.release | 并入 develop+main、tag `v0.Mx.0`、推送、Demo 归档、milestones 置 done | 验收项全"通过" |
 
 **里程碑密度原则**：一个里程碑实现一个功能模块；独立可验收；规模 S ≤1 周 / M 1~3 周（L 须书面说明）；先地基后上层。明细字段含优先级（MoSCoW）与用户旅程（3~7 步，prototype 屏清单与验收项由此拆解）。
@@ -146,11 +147,11 @@ flowchart TD
 
 **UI Demo 环节**（speckit.prototype）：位于 milestones 之后、specify 之前；Demo 用轻量 HTML + mock 数据（不绑定真实栈）；开发期 UI 变更分级——视觉微调直接改（报告留痕）/ 交互变更先改 Demo 再走 clarify→plan→tasks（先改代码视为违例）/ 范围变更走 milestones 裁决；release 时真实界面截图回灌，Demo 标"已被实现取代"归档。
 
-**分析报告与分阶段问题消除**：报告默认存 `./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md`，每 spec 一份、按轮次追加、不重写历史。每条问题都是完整问题卡，至少含问题 ID、稳定问题键、证据、影响、要修改的产物章节、验证判据，以及唯一修复入口：`speckit.clarify`、`speckit.plan` 或 `speckit.tasks`。严重级为 Critical（阻塞）/ High（返工）/ Medium（风险）/ Low（打磨），四级全部清零；rectify 按 clarify → plan → tasks 执行，下游修改引入上游问题时回到最早受影响阶段。同一稳定问题键连续两轮未消除时停止自动循环，交用户裁决。
+**分析报告与分阶段问题消除**：报告目录由 constitution 中唯一一行 `analysis_report_dir: <path>` 决定；缺失时使用默认 `./.auxiliary/docs/specs-analysis-repo/`。文件名固定为 `[spec-dir]-analysis.md`；重复、空或不可解析的登记会停止流程，不得猜测。每 spec 一份、按轮次追加、不重写历史。每条问题都是完整问题卡，至少含问题 ID、稳定问题键、证据、影响、要修改的产物章节、验证判据，以及唯一修复入口：`speckit.clarify`、`speckit.plan` 或 `speckit.tasks`。严重级为 Critical（阻塞）/ High（返工）/ Medium（风险）/ Low（打磨），四级全部清零；rectify 按 clarify → plan → tasks 执行，下游修改引入上游问题时回到最早受影响阶段。同一稳定问题键连续两轮未消除时停止自动循环，交用户裁决。
 
 **实现后收敛**：`/speckit.converge` 是 spec-kit 核心命令，本 preset 不捆绑、不覆盖。全部 Agent 可执行任务完成后，implement 交接给 converge；若追加任务则回到 implement，完成后再 converge，只有报告 `Converged` 才允许进入验收。
 
-**可选验收模拟**：`Converged` 后可选运行 `/speckit.simulate-acceptance`，对能用真实命令与证据验证的项目做预验收。每项状态只能是 `AI_PASS`、`AI_FAIL`、`HUMAN_REQUIRED`、`BLOCKED` 之一。不得伪造测试输出、退出码、截图、外部系统状态或真人体验结论。模拟记录 commit、产物指纹与工作区清洁 baseline；缺失、格式错误或过期的 baseline 一律退回全人工验收，存在 `AI_FAIL` 时禁止正式验收。
+**可选验收模拟**：`Converged` 后可选运行 `/speckit.simulate-acceptance`，对能用真实命令与证据验证的项目做预验收。每项状态只能是 `AI_PASS`、`AI_FAIL`、`HUMAN_REQUIRED`、`BLOCKED` 之一。不得伪造测试输出、退出码、截图、外部系统状态或真人体验结论。每个来源行记录稳定键与 `判据指纹: sha256:<hex>`：当前判据经 Unicode NFC 规范化、行尾统一为 LF、去掉首尾空白、内部连续空白折叠为一个空格后，以 UTF-8 计算 SHA-256。正式验收会独立提取并计算当前判据指纹；缺失、被替换、无法解析或指纹不匹配会使整个模拟失效并退回全人工验收。模拟还记录 commit、产物指纹与工作区清洁 baseline；缺失、格式错误或过期的 baseline 同样退回全人工验收。只要存在可见的 `AI_FAIL`，即使 baseline 已过期，也阻止验收。
 
 **DevOps 迭代路径**：里程碑文件即"计划板"（add/revise + 变更日志）；已 done 里程碑的功能增强一律 add 新里程碑，不改历史；回顾评审后规划下一轮。禁止绕过里程碑直接 specify。
 
@@ -166,11 +167,11 @@ flowchart TD
 | --- | --- | --- |
 | 功能愿景来源 | `speckit.milestones init` 时指定（`--vision <路径>` 或询问） | 询问；缺失可先用 speckit.prd 生成 |
 | UX 基线路径 | `.specify/memory/milestones.md` §一 `ux_baseline` | `docs/ux-baseline/`（用 ux-baseline-template 建立） |
-| 分析报告输出目录 | constitution 中可改配 | `./.auxiliary/docs/specs-analysis-repo/` |
+| 分析报告输出目录 | constitution 唯一一行 `analysis_report_dir: <path>`；重复、空或不可解析即停止 | `./.auxiliary/docs/specs-analysis-repo/`；文件名 `[spec-dir]-analysis.md` |
 | 前期探索登记处 | 固定约定（grill/brainstorm 写入，prd/milestones 吸收） | `docs/explore/` |
 | AGENTS.md 提醒块 | `/speckit.setup`（inject/remove/status） | 项目根 `AGENTS.md`，标记块幂等注入 |
 
-从 v1.5.0 升级时，分析报告默认目录已变更。若项目 constitution 固定了旧默认目录，请同步修改配置，并把既有报告迁入 `.auxiliary/docs/specs-analysis-repo/`，保持轮次历史连续。
+从 v1.5.0 升级时，分析报告默认目录已变更。若项目 constitution 固定了旧默认目录，请同步修改 `analysis_report_dir: <path>`，并把既有报告迁入所选目录，保持轮次历史连续。
 
 ## 文件清单
 

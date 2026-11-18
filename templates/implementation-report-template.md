@@ -14,9 +14,14 @@
 | 模拟结果来源 | `specs/[NNN-mX-短名]/acceptance-simulation.md`（当前有效） / 未提供或已过期，已退回全人工验收 |
 | 模拟 baseline | commit `[...]` / spec `sha256:[...]` / plan `sha256:[...]` / tasks `sha256:[...]` |
 | 模拟来源覆盖 | `PASS`（当前期望来源键 [n]/[n] 恰好一次） / 未导入 |
+| 模拟判据认证 | `PASS`（来源键与判据指纹均匹配 [n]/[n]） / 未导入 |
 | 模拟工作区清洁基线 | `PASS`（除 acceptance-simulation.md 外无变更） / 未导入 |
 | AI_PASS 成功证据 | 退出码 0 / 预期非零成功契约 [摘要] / 不适用 |
 | 模拟结论 | `ready-for-acceptance` / `needs-user-input` / 不适用（未导入） |
+| 验证前快照 | HEAD `[...]` / 工作区 `[...]` / spec `sha256:[...]` / plan `sha256:[...]` / tasks `sha256:[...]` |
+| 验证后复检 | `PASS`（HEAD、工作区与三项指纹均未变化） / `FAIL`（停止报告生成并要求重新 converge） |
+
+<!-- 判据指纹格式固定为 `判据指纹: sha256:<hex>`；显示值可使用 `sha256:[...]` 作为待填占位。 -->
 
 ---
 
@@ -53,10 +58,10 @@
      模拟缺失或过期时，本表必须覆盖全部验收项，执行全人工验收。
      结果记录位置：本表"验收结果"列。全部通过后的收尾动作见 §五。 -->
 
-| 编号 | 来源键 | 来源 | 验收判据 | 验收状态 | 证据 | 人工指南 | 验收结果 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| AC-01 | `spec:AC-01` | spec | [可观察、可判定的标准] | `AI_PASS` / `HUMAN_REQUIRED` / `BLOCKED` / 人工验收 | [模拟路径、成功退出码或非零契约、输出摘要或证据路径] | 见 AC-01 指南 / 不适用 | 通过（`AI_PASS` 导入） / 待验收 / 不通过（原因） |
-| AC-02 | `tasks:T012-manual` | tasks | [判据] | `HUMAN_REQUIRED` / `BLOCKED` / 人工验收 | [为什么没有 AI 运行证据；不得伪造] | 见 AC-02 指南 | 待验收 |
+| 编号 | 来源键 | 判据指纹 | 来源 | 验收判据 | 验收状态 | 证据 | 人工指南 | 验收结果 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| AC-01 | `spec:AC-01` | `sha256:[...]` | spec | [可观察、可判定的标准] | `AI_PASS` / `HUMAN_REQUIRED` / `BLOCKED` / 人工验收 | [模拟路径、成功退出码或非零契约、输出摘要或证据路径] | 见 AC-01 指南 / 不适用 | 通过（`AI_PASS` 导入） / 待验收 / 不通过（原因） |
+| AC-02 | `tasks:T012-manual` | `sha256:[...]` | tasks | [判据] | `HUMAN_REQUIRED` / `BLOCKED` / 人工验收 | [为什么没有 AI 运行证据；不得伪造] | 见 AC-02 指南 | 待验收 |
 
 ### AC-01 [人工验收项标题]
 
@@ -99,7 +104,7 @@
 | 功能规格 | specs/[NNN-mX-短名]/spec.md |
 | 技术计划 | specs/[NNN-mX-短名]/plan.md |
 | 任务清单 | specs/[NNN-mX-短名]/tasks.md |
-| 分析报告 | ./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md |
+| 分析报告 | 按唯一规则解析：constitution 中存在唯一一行 `analysis_report_dir: <path>` 时使用 `<path>/[spec-dir]-analysis.md`；否则使用 `./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md`。重复、空或不可解析的路径登记不得静默回退。 |
 | converge 证据 | [当前会话摘要/报告路径] |
 | 验收模拟 | specs/[NNN-mX-短名]/acceptance-simulation.md（如存在） |
 | 源码入口 | [src/...] |

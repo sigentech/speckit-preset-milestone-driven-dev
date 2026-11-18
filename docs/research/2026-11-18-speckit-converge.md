@@ -289,13 +289,13 @@ implement -> converge -> implement -> converge ...
 | --- | --- | --- |
 | [preset.yml](../../preset.yml) | `requires.speckit_version: ">=1.0.9"` | 保证 converge 命令与当前完成性判定语义可用 |
 | `commands/` | 没有 `speckit.converge.md` | 当前完全依赖上游核心命令 |
-| [speckit.analyze.md](../../commands/speckit.analyze.md) | 检查 spec/plan/tasks 跨产物一致性，报告落盘到 `.auxiliary/docs/specs-analysis-repo/` | 实现前门禁；报告不是 converge 的替代品，也不应升级成 converge 的唯一意图源 |
+| [speckit.analyze.md](../../commands/speckit.analyze.md) | 检查 spec/plan/tasks 跨产物一致性；报告目录由 constitution 唯一一行 `analysis_report_dir: <path>` 决定，缺失时落盘到默认 `./.auxiliary/docs/specs-analysis-repo/`，文件名固定 `[spec-dir]-analysis.md` | 实现前门禁；报告不是 converge 的替代品，也不应升级成 converge 的唯一意图源 |
 | [speckit.rectify.md](../../commands/speckit.rectify.md) | 按 clarify -> plan -> tasks 三阶段消除并支持上游回退 | 修复的是规格体系，不检查或不修改代码，发生阶段早于 converge |
 | [speckit.implement.md](../../commands/speckit.implement.md) | 要求分析报告清零；全部 Agent 可执行任务完成后 handoff 到核心 `speckit.converge` | 形成稳定的实现后拦截点，避免直接进入验收 |
-| [speckit.simulate-acceptance.md](../../commands/speckit.simulate-acceptance.md) | converge 报告 `Converged` 后可选运行，生成证据驱动的预验收 | 不能替代 converge；baseline 过期时退回全人工验收 |
-| [speckit.acceptance.md](../../commands/speckit.acceptance.md) | 要求当前会话确认 `Converged` 后生成 `implementation-report.md` | converge 追加任务后不会生成可能过期的验收报告 |
+| [speckit.simulate-acceptance.md](../../commands/speckit.simulate-acceptance.md) | converge 报告 `Converged` 后可选运行，生成证据驱动的预验收；每个来源同时记录稳定键与判据指纹 | 不能替代 converge；判据缺失/替换/不可解析或指纹不匹配时整个模拟失效，baseline 过期时退回全人工验收 |
+| [speckit.acceptance.md](../../commands/speckit.acceptance.md) | 要求当前会话确认 `Converged` 后生成 `implementation-report.md`；独立认证来源键与判据指纹，验证前后复检 HEAD、工作区状态和产物指纹 | converge 追加任务后不会生成可能过期的验收报告；验证过程改动仓库时停止报告并要求重新 converge |
 | [speckit.release.md](../../commands/speckit.release.md) | 要求验收全通过、报告已提交且分析报告清零 | 验收前已经经过 implementation-to-intent convergence |
-| [README.md](../../README.md) / [README.zh-CN.md](../../README.zh-CN.md) | 十二步流程为 analyze/rectify -> implement -> converge -> optional simulate-acceptance -> acceptance -> release | 文档与实际编排一致 |
+| [README.md](../../README.md) / [README.zh-CN.md](../../README.zh-CN.md) | 分支动作不编号；十二个命令阶段为 prototype -> specify -> clarify -> plan -> tasks -> analyze -> rectify -> implement -> converge -> optional simulate-acceptance -> acceptance -> release | 文档与实际编排一致，append 任务循环明确为 implement -> converge |
 
 v1.6.0 落地后的主循环是：
 

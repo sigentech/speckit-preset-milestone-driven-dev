@@ -21,7 +21,8 @@ $ARGUMENTS
 
 ## 执行算法
 
-1. **加载并校验报告**：读取 `./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md` 的最新轮次，取得全部“未消除”问题及其问题 ID、稳定问题键、严重级、修复入口命令、具体修改建议和验证判据。
+1. **解析报告路径并加载校验**：读取 `.specify/memory/constitution.md`；若存在唯一一行 `analysis_report_dir: <path>`，使用该目录，否则使用 `./.auxiliary/docs/specs-analysis-repo/`。报告文件名固定为 `[spec-dir]-analysis.md`。出现重复、空或不可解析的路径登记时停止，要求用户先修正 constitution。
+   - 读取解析后的最新轮次，取得全部“未消除”问题及其问题 ID、稳定问题键、严重级、修复入口命令、具体修改建议和验证判据。
    - 若“修复入口命令”不是恰好 `speckit.clarify`、`speckit.plan`、`speckit.tasks` 中的一个（包括缺失、多个或未知命令），停止处理并请求用户重跑 `speckit.analyze`；不得自行映射或忽略该问题。
    - 只有全部未消除问题都通过上述唯一入口校验后，才可开始阶段循环。
    - 若没有未消除问题，提示直接重跑 analyze 或进入 `speckit.implement`，退出。
