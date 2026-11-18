@@ -174,3 +174,31 @@ class PresetContractTests(unittest.TestCase):
             (self.repo_root / "commands/speckit.converge.md").exists(),
             "the preset must reuse core speckit.converge",
         )
+
+    def test_navigator_prioritizes_simulation_failures(self):
+        navigator = self.read("templates/agents-reminder-template.md")
+        failure_rows = [
+            line
+            for line in navigator.splitlines()
+            if "acceptance-simulation.md" in line and "AI_FAIL" in line
+        ]
+
+        self.assertEqual(1, len(failure_rows), "navigator needs one AI_FAIL priority row")
+        failure_row = failure_rows[0]
+        for route in (
+            "/speckit.clarify",
+            "/speckit.plan",
+            "/speckit.tasks",
+            "/speckit.implement",
+        ):
+            self.assertIn(route, failure_row)
+        self.assertIn("恰好一个", failure_row)
+        self.assertIn("/speckit.converge", failure_row)
+        self.assertIn("/speckit.simulate-acceptance", failure_row)
+        self.assertIn("/speckit.acceptance", failure_row)
+
+        general_converged_row = "| converge 已报告 `Converged`"
+        self.assertLess(
+            navigator.index(failure_row),
+            navigator.index(general_converged_row),
+        )

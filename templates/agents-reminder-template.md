@@ -24,6 +24,7 @@
 | 最新一轮分析报告存在未清零问题 | 待消除问题 | `/speckit.rectify` | `/speckit.analyze`（消除后重跑） |
 | 报告已清零、仍有 Agent 可执行任务未完成 | 待编码实现 | `/speckit.implement` | `/speckit.analyze` |
 | 全部 Agent 可执行任务完成，但当前流程尚未确认 converge 报告 `Converged` | 待收敛 | `/speckit.converge` | converge 追加任务时回 `/speckit.implement` 完成后再运行 `/speckit.converge` |
+| `acceptance-simulation.md` 存在任一 `AI_FAIL` | 验收模拟失败待修复 | 按记录根因选恰好一个入口：`/speckit.clarify` / `/speckit.plan` / `/speckit.tasks` / `/speckit.implement` | 修复后运行 `/speckit.converge` → `/speckit.simulate-acceptance`；新模拟确认无 `AI_FAIL` 后才进入 `/speckit.acceptance` |
 | converge 已报告 `Converged`，无待处理追加任务、无 `implementation-report.md` | 待可选模拟与正式验收 | 可选 `/speckit.simulate-acceptance` → `/speckit.acceptance` | — |
 | 验收清单未全部"通过" | 待人工逐项验收 | 按报告中的操作指南逐项验收并记录 | — |
 | 验收全过、里程碑未置 done | 待发布合流 | `/speckit.release` | — |
