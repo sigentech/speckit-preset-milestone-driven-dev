@@ -21,3 +21,14 @@ class PresetContractTests(unittest.TestCase):
             self.assertIn(field, text)
         for route in ("speckit.clarify", "speckit.plan", "speckit.tasks"):
             self.assertIn(route, text)
+
+    def test_rectify_uses_strict_phase_order_and_regression(self):
+        text = self.read("commands/speckit.rectify.md")
+        clarify = text.index("speckit.clarify 阶段")
+        plan = text.index("speckit.plan 阶段")
+        tasks = text.index("speckit.tasks 阶段")
+        self.assertLess(clarify, plan)
+        self.assertLess(plan, tasks)
+        self.assertIn("按 Critical → High → Medium → Low", text)
+        self.assertIn("回到最早受影响阶段", text)
+        self.assertIn("同一稳定问题键连续两轮", text)
