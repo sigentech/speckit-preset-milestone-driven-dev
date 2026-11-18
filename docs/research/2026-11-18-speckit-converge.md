@@ -319,9 +319,11 @@ analyze/rectify 循环 -> implement -> converge
 4. implement 已改为自动 handoff 到 converge，避免只靠用户记忆手动补跑。
 5. acceptance 在 converge 后生成，避免追加任务使 `implementation-report.md` 立即过期。
 
-## 8. 集成方案与推荐
+## 8. v1.6 前集成方案取舍与最终落地
 
-### 方案 A：直接复用上游，人工可选收尾
+以下方案 A、B、C 是 preset `1.5.0` 调研时评估的备选。最终采用并已在 `1.6.0` 落地的是方案 B；A 与 C 仅保留为历史取舍记录。
+
+### 方案 A：直接复用上游，人工可选收尾（历史备选，未采用）
 
 做法：
 
@@ -342,23 +344,24 @@ analyze/rectify 循环 -> implement -> converge
 - 若在 acceptance 后才手跑，追加任务可能使验收报告过期；
 - 无法形成稳定、可验证的 preset 门禁。
 
-### 方案 B：直接复用上游命令，本地只调整编排，推荐
+### 方案 B：直接复用上游命令，本地只调整编排（已采用并落地）
 
-做法：
+v1.6.0 落地做法：
 
 - 不 override converge 正文；
-- 将来在本地的 implement handoff、workflow navigator、README 流程中把入口改为 converge；
-- converge 结果为 `tasks_appended` 时回到 implement，结果为 `converged` 时进入 acceptance；
+- 本地 implement handoff、workflow navigator、双 README 已把入口改为 converge；
+- converge 结果为 `tasks_appended` 时回到 implement，结果为 `Converged` 时先进入可选 simulate-acceptance，再进入 acceptance；
 - 继续使用上游 `before_converge` / `after_converge` hooks。
 
-目标流程：
+已落地流程：
 
 ```text
 analyze/rectify 清零
 -> implement
 -> converge
 -> tasks_appended: implement -> converge
--> converged
+-> Converged
+-> optional simulate-acceptance
 -> acceptance
 -> release
 ```
@@ -366,17 +369,17 @@ analyze/rectify 清零
 优点：
 
 - 保留上游全部语义、任务格式和 hook 契约；
-- 补上本地当前缺失的实现后代码闭合；
+- 已补上实现后代码对 spec/plan/tasks/constitution 的闭合；
 - 不复制上游命令，未来升级时维护面最小；
-- 能明确解决当前 implement 直接跳 acceptance 的顺序问题。
+- 已消除 implement 直接跳 acceptance 的顺序风险。
 
-风险：
+落地约束：
 
-- 必须同步修改本地编排和相关文档，不能只写一句“建议运行”；
-- 需要为循环设置交给用户的终止条件，例如 spec-kit 命令本身没有自动递归，外层编排应在无进展或达到人工设定上限时停下；
-- 需要建立版本门槛：正式承诺当前语义时至少 `>=1.0.9`。
+- 本地编排和相关文档必须同步，不能只写一句“建议运行”；
+- 外层编排在 converge 追加任务时回到 implement，不假设 spec-kit 自动递归；
+- 最低 spec-kit 版本已设为 `>=1.0.9`，覆盖当前完成性判定语义。
 
-### 方案 C：薄 override，完全嵌入 preset 生命周期
+### 方案 C：薄 override，完全嵌入 preset 生命周期（历史备选，未采用）
 
 做法：
 
@@ -396,9 +399,9 @@ analyze/rectify 清零
 - 每次上游修复或模板升级都需要人工同步；
 - 很容易把本地 analyze 报告、acceptance 报告或里程碑文件错误提升为新的意图源。
 
-### 推荐
+### 最终落地
 
-采用**方案 B**：
+已采用**方案 B**：
 
 - converge 定位为 `rectify` 前置闭环之后、`acceptance/release` 之前的实现后严格收尾门；
 - 直接复用上游命令，不复制核心语义；
@@ -470,4 +473,4 @@ analyze/rectify 清零
 | analyze/tasks/implement 的相邻职责 | [analyze.md](https://github.com/github/spec-kit/blob/59d61c59630c3bd5a294f4c23e43a60d8ab98d02/templates/commands/analyze.md)、[tasks.md](https://github.com/github/spec-kit/blob/59d61c59630c3bd5a294f4c23e43a60d8ab98d02/templates/commands/tasks.md)、[implement.md](https://github.com/github/spec-kit/blob/59d61c59630c3bd5a294f4c23e43a60d8ab98d02/templates/commands/implement.md) | `main@59d61c5` |
 | converge 模板契约回归测试 | [test_converge_template_scaffold.py](https://github.com/github/spec-kit/blob/59d61c59630c3bd5a294f4c23e43a60d8ab98d02/tests/test_converge_template_scaffold.py) | `main@59d61c5` |
 | before/after hooks | [extensions API](https://github.com/github/spec-kit/blob/59d61c59630c3bd5a294f4c23e43a60d8ab98d02/docs/extensions/api.md) | `main@59d61c5` |
-| 本地无 converge、版本要求和现有循环 | [preset.yml](../../preset.yml)、[speckit.analyze.md](../../commands/speckit.analyze.md)、[speckit.rectify.md](../../commands/speckit.rectify.md)、[speckit.implement.md](../../commands/speckit.implement.md)、[speckit.acceptance.md](../../commands/speckit.acceptance.md)、[speckit.release.md](../../commands/speckit.release.md)、[README.md](../../README.md)、[README.zh-CN.md](../../README.zh-CN.md) | 本地 `main@39dd5f795e6a04d0e02efb5c40790467fa71bad0` |
+| v1.6 落地后的本地编排、版本要求和验收模拟 | [preset.yml](../../preset.yml)、[speckit.analyze.md](../../commands/speckit.analyze.md)、[speckit.rectify.md](../../commands/speckit.rectify.md)、[speckit.implement.md](../../commands/speckit.implement.md)、[speckit.simulate-acceptance.md](../../commands/speckit.simulate-acceptance.md)、[speckit.acceptance.md](../../commands/speckit.acceptance.md)、[speckit.release.md](../../commands/speckit.release.md)、[README.md](../../README.md)、[README.zh-CN.md](../../README.zh-CN.md) | preset `v1.6.0` |

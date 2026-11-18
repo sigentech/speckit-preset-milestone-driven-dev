@@ -1,5 +1,6 @@
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 
 class PresetContractTests(unittest.TestCase):
@@ -10,6 +11,101 @@ class PresetContractTests(unittest.TestCase):
 
     def legacy_directory_aliases(self):
         return ("." + "prepared", "." + "prepare")
+
+    def find_legacy_alias_matches(self, root=None):
+        scan_root = Path(root) if root is not None else self.repo_root
+        binary_suffixes = {
+            ".7z",
+            ".bmp",
+            ".class",
+            ".db",
+            ".dll",
+            ".dylib",
+            ".exe",
+            ".gif",
+            ".gz",
+            ".ico",
+            ".jar",
+            ".jpeg",
+            ".jpg",
+            ".mov",
+            ".mp3",
+            ".mp4",
+            ".o",
+            ".otf",
+            ".pdf",
+            ".png",
+            ".so",
+            ".sqlite",
+            ".sqlite3",
+            ".tar",
+            ".tgz",
+            ".ttf",
+            ".wav",
+            ".webm",
+            ".webp",
+            ".woff",
+            ".woff2",
+            ".xls",
+            ".xlsx",
+            ".zip",
+        }
+        ignored_directories = {".git", ".superpowers", "__pycache__"}
+        matches = []
+
+        for path in scan_root.rglob("*"):
+            if not path.is_file():
+                continue
+            if ignored_directories.intersection(path.parts):
+                continue
+            if path.suffix.lower() in binary_suffixes:
+                continue
+
+            relative_path = path.relative_to(scan_root).as_posix()
+            try:
+                text = path.read_text(encoding="utf-8")
+            except UnicodeDecodeError as exc:
+                self.fail(f"non-binary source file is not UTF-8: {relative_path}: {exc}")
+
+            for alias in self.legacy_directory_aliases():
+                if alias in text:
+                    matches.append(f"{relative_path}: {alias}")
+
+        return matches
+
+    def test_repository_alias_scan_checks_extensionless_and_unknown_text(self):
+        alias = self.legacy_directory_aliases()[1]
+
+        for filename in ("NOTICE", "notes.rst"):
+            with self.subTest(filename=filename):
+                with TemporaryDirectory(
+                    prefix=".alias-scan-fixture-",
+                ) as temp_dir:
+                    fixture = Path(temp_dir) / filename
+                    fixture.write_text(f"prefix {alias} suffix", encoding="utf-8")
+
+                    matches = self.find_legacy_alias_matches(temp_dir)
+                    self.assertEqual(1, len(matches))
+                    self.assertIn(filename, matches[0])
+
+    def test_repository_alias_scan_skips_known_binary_formats(self):
+        alias = self.legacy_directory_aliases()[1]
+
+        with TemporaryDirectory(prefix=".alias-scan-fixture-") as temp_dir:
+            fixture = Path(temp_dir) / "image.png"
+            fixture.write_bytes(alias.encode("utf-8"))
+
+            self.assertEqual([], self.find_legacy_alias_matches(temp_dir))
+
+    def test_repository_alias_scan_fails_on_undecodable_unknown_file(self):
+        with TemporaryDirectory(
+            prefix=".alias-scan-fixture-",
+        ) as temp_dir:
+            fixture = Path(temp_dir) / "opaque.asset"
+            fixture.write_bytes(b"\xff\xfe\xfa")
+
+            with self.assertRaisesRegex(AssertionError, "not UTF-8"):
+                self.find_legacy_alias_matches(temp_dir)
 
     def test_release_metadata_and_default_directory(self):
         manifest = self.read("preset.yml")
@@ -30,39 +126,7 @@ class PresetContractTests(unittest.TestCase):
             self.assertIn(".auxiliary", text)
 
     def test_repository_has_no_legacy_auxiliary_directory_alias(self):
-        text_suffixes = {
-            ".cjs",
-            ".css",
-            ".html",
-            ".js",
-            ".json",
-            ".md",
-            ".py",
-            ".sh",
-            ".toml",
-            ".txt",
-            ".yaml",
-            ".yml",
-        }
-        text_names = {".gitattributes", ".gitignore"}
-        ignored_directories = {".git", ".superpowers", "__pycache__"}
-        matches = []
-        aliases = self.legacy_directory_aliases()
-
-        for path in self.repo_root.rglob("*"):
-            if not path.is_file():
-                continue
-            if ignored_directories.intersection(path.parts):
-                continue
-            if path.suffix.lower() not in text_suffixes and path.name not in text_names:
-                continue
-
-            text = path.read_text(encoding="utf-8")
-            relative_path = path.relative_to(self.repo_root).as_posix()
-            for alias in aliases:
-                if alias in text:
-                    matches.append(f"{relative_path}: {alias}")
-
+        matches = self.find_legacy_alias_matches()
         self.assertEqual([], matches, "legacy auxiliary directory aliases remain")
 
     def test_analyze_report_has_severity_sections_and_routes(self):
