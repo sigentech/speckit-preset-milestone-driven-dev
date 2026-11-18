@@ -7,7 +7,7 @@
 | 默认分支 | `main` |
 | 调研时默认分支 commit | `59d61c59630c3bd5a294f4c23e43a60d8ab98d02` |
 | 调研时最新正式 release | `v1.4.2`，发布于 2026-11-17 |
-| 本地 preset 基线 | `main@39dd5f795e6a04d0e02efb5c40790467fa71bad0`，preset `v1.5.0` |
+| 本地 preset 落地结果 | preset `v1.6.0`，2026-11-18 |
 
 本文只保留官方源码、官方文档、commit 和 release notes 可以直接支持的一手结论。除特别标注为“工程判断”的内容外，不把博客、二手总结或推测当作事实。
 
@@ -281,25 +281,28 @@ implement -> converge -> implement -> converge ...
 
 来源：[evolving specs: Deliver and Assess the Change](https://github.com/github/spec-kit/blob/59d61c59630c3bd5a294f4c23e43a60d8ab98d02/docs/how-to/evolving-specs.md#deliver-and-assess-the-change)。
 
-## 7. 本地 preset 现状
+## 7. 本地 preset 落地结果
 
-本地基线为 `main@39dd5f795e6a04d0e02efb5c40790467fa71bad0`，`preset.yml` 中 preset 版本为 `1.5.0`。
+本轮的 preset 版本为 `1.6.0`，最低 spec-kit 版本为 `>=1.0.9`。
 
-| 本地项 | 当前事实 | 对 converge 的影响 |
+| 本地项 | 落地结果 | 对 converge 的影响 |
 | --- | --- | --- |
-| [preset.yml](../../preset.yml) | `requires.speckit_version: ">=0.5.0"` | 不能保证 converge 命令存在，更不能保证 `v1.0.9` 语义 |
+| [preset.yml](../../preset.yml) | `requires.speckit_version: ">=1.0.9"` | 保证 converge 命令与当前完成性判定语义可用 |
 | `commands/` | 没有 `speckit.converge.md` | 当前完全依赖上游核心命令 |
-| [speckit.analyze.md](../../commands/speckit.analyze.md) | 检查 spec/plan/tasks 跨产物一致性，报告落盘到 `.prepare/docs/specs-analysis-repo/` | 实现前门禁；报告不是 converge 的替代品，也不应升级成 converge 的唯一意图源 |
-| [speckit.rectify.md](../../commands/speckit.rectify.md) | 按报告路由 clarify -> plan -> tasks，再重跑 analyze | 修复的是规格体系，不检查或不修改代码，发生阶段早于 converge |
-| [speckit.implement.md](../../commands/speckit.implement.md) | 要求分析报告清零；完成后自动 handoff 到 `speckit.acceptance` | 当前没有 converge 拦截点；直接手动补跑容易与验收顺序冲突 |
-| [speckit.acceptance.md](../../commands/speckit.acceptance.md) | 生成 `implementation-report.md` 并执行自动化验证 | converge 追加任务后，已有验收报告可能不再覆盖新的实现范围 |
-| [speckit.release.md](../../commands/speckit.release.md) | 要求验收全通过、报告已提交且分析报告清零 | 当前 release 门禁不包含 implementation-to-intent convergence |
-| [README.md](../../README.md) / [README.zh-CN.md](../../README.zh-CN.md) | 十步流程为 analyze/rectify -> implement -> acceptance -> release | 缺少实现后代码对意图的完整性收敛环节 |
+| [speckit.analyze.md](../../commands/speckit.analyze.md) | 检查 spec/plan/tasks 跨产物一致性，报告落盘到 `.auxiliary/docs/specs-analysis-repo/` | 实现前门禁；报告不是 converge 的替代品，也不应升级成 converge 的唯一意图源 |
+| [speckit.rectify.md](../../commands/speckit.rectify.md) | 按 clarify -> plan -> tasks 三阶段消除并支持上游回退 | 修复的是规格体系，不检查或不修改代码，发生阶段早于 converge |
+| [speckit.implement.md](../../commands/speckit.implement.md) | 要求分析报告清零；全部 Agent 可执行任务完成后 handoff 到核心 `speckit.converge` | 形成稳定的实现后拦截点，避免直接进入验收 |
+| [speckit.simulate-acceptance.md](../../commands/speckit.simulate-acceptance.md) | converge 报告 `Converged` 后可选运行，生成证据驱动的预验收 | 不能替代 converge；baseline 过期时退回全人工验收 |
+| [speckit.acceptance.md](../../commands/speckit.acceptance.md) | 要求当前会话确认 `Converged` 后生成 `implementation-report.md` | converge 追加任务后不会生成可能过期的验收报告 |
+| [speckit.release.md](../../commands/speckit.release.md) | 要求验收全通过、报告已提交且分析报告清零 | 验收前已经经过 implementation-to-intent convergence |
+| [README.md](../../README.md) / [README.zh-CN.md](../../README.zh-CN.md) | 十二步流程为 analyze/rectify -> implement -> converge -> optional simulate-acceptance -> acceptance -> release | 文档与实际编排一致 |
 
-本地现有主循环实际是：
+v1.6.0 落地后的主循环是：
 
 ```text
-analyze/rectify 循环 -> implement -> acceptance -> release
+analyze/rectify 循环 -> implement -> converge
+-> 若追加任务：implement -> converge
+-> Converged -> 可选 simulate-acceptance -> acceptance -> release
 ```
 
 上游 converge 与本地 rectify 是互补关系：
@@ -308,13 +311,13 @@ analyze/rectify 循环 -> implement -> acceptance -> release
 - `converge`：实现后，让当前代码对已闭合的意图闭合；
 - `acceptance`：在实现和收敛完成后，生成人工验收依据。
 
-基于本地源码的工程判断：
+落地时采用以下工程判断：
 
 1. converge 不能紧跟在 rectify 后执行；这时代码还没有按最新任务实现，只会得到大量 missing。
-2. 严格顺序应是 `analyze/rectify 清零 -> implement -> converge -> acceptance -> release`。
-3. 若 converge 追加任务，应进入 `implement -> converge` 循环，循环完成后再生成 acceptance。
-4. 当前 implement 自动 handoff 到 acceptance，因此“不调整本地编排、只让用户记得手跑 converge”是脆弱方案。
-5. 若在 acceptance 后追加任务，旧 `implementation-report.md` 可能过期；这是由本地 acceptance 的生成时机推导出的风险，不是上游命令的额外能力。
+2. 严格顺序是 `analyze/rectify 清零 -> implement -> converge -> 可选 simulate-acceptance -> acceptance -> release`。
+3. converge 追加任务时进入 `implement -> converge` 循环，循环完成后再生成 acceptance。
+4. implement 已改为自动 handoff 到 converge，避免只靠用户记忆手动补跑。
+5. acceptance 在 converge 后生成，避免追加任务使 `implementation-report.md` 立即过期。
 
 ## 8. 集成方案与推荐
 
@@ -399,8 +402,8 @@ analyze/rectify 清零
 
 - converge 定位为 `rectify` 前置闭环之后、`acceptance/release` 之前的实现后严格收尾门；
 - 直接复用上游命令，不复制核心语义；
-- 本地只编排 `implement -> converge -> conditional implement/converge -> acceptance`；
-- 当前任务不修改这些文件，只把此方案记录为后续实施建议。
+- 本地编排 `implement -> converge -> conditional implement/converge -> optional simulate-acceptance -> acceptance`；
+- 该方案已在 preset `1.6.0` 落地，后续升级继续跟随上游 converge，不新增本地覆盖。
 
 ## 9. 如果 override，需要保留与可定制什么
 

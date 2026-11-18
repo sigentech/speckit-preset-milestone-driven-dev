@@ -8,12 +8,70 @@ class PresetContractTests(unittest.TestCase):
     def read(self, relative_path):
         return (self.repo_root / relative_path).read_text(encoding="utf-8")
 
+    def legacy_directory_aliases(self):
+        return ("." + "prepared", "." + "prepare")
+
+    def test_release_metadata_and_default_directory(self):
+        manifest = self.read("preset.yml")
+        readme_en = self.read("README.md")
+        readme_zh = self.read("README.zh-CN.md")
+
+        self.assertIn('version: "1.6.0"', manifest)
+        self.assertIn('speckit_version: ">=1.0.9"', manifest)
+        self.assertIn(".auxiliary/docs/specs-analysis-repo/", manifest)
+        self.assertEqual(manifest.count('type: "command"'), 15)
+        self.assertEqual(manifest.count('type: "template"'), 11)
+        self.assertIn('name: "speckit.simulate-acceptance"', manifest)
+        self.assertIn('name: "acceptance-simulation-template"', manifest)
+        for text in (readme_en, readme_zh):
+            self.assertIn("v1.6.0", text)
+            self.assertIn("/speckit.converge", text)
+            self.assertIn("/speckit.simulate-acceptance", text)
+            self.assertIn(".auxiliary", text)
+
+    def test_repository_has_no_legacy_auxiliary_directory_alias(self):
+        text_suffixes = {
+            ".cjs",
+            ".css",
+            ".html",
+            ".js",
+            ".json",
+            ".md",
+            ".py",
+            ".sh",
+            ".toml",
+            ".txt",
+            ".yaml",
+            ".yml",
+        }
+        text_names = {".gitattributes", ".gitignore"}
+        ignored_directories = {".git", ".superpowers", "__pycache__"}
+        matches = []
+        aliases = self.legacy_directory_aliases()
+
+        for path in self.repo_root.rglob("*"):
+            if not path.is_file():
+                continue
+            if ignored_directories.intersection(path.parts):
+                continue
+            if path.suffix.lower() not in text_suffixes and path.name not in text_names:
+                continue
+
+            text = path.read_text(encoding="utf-8")
+            relative_path = path.relative_to(self.repo_root).as_posix()
+            for alias in aliases:
+                if alias in text:
+                    matches.append(f"{relative_path}: {alias}")
+
+        self.assertEqual([], matches, "legacy auxiliary directory aliases remain")
+
     def test_analyze_report_has_severity_sections_and_routes(self):
         command = self.read("commands/speckit.analyze.md")
         text = self.read("templates/analysis-report-template.md")
         report_path = "./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md"
         for source in (command, text):
-            self.assertNotIn(".prepare", source)
+            for alias in self.legacy_directory_aliases():
+                self.assertNotIn(alias, source)
             self.assertIn(report_path, source)
         for heading in ("Critical", "High", "Medium", "Low"):
             self.assertIn(heading, text)
@@ -135,7 +193,8 @@ class PresetContractTests(unittest.TestCase):
         self.assertIn("Agent 可执行", implement)
         self.assertIn("需人工", implement)
         self.assertIn("./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md", implement)
-        self.assertNotIn(".prepare", implement)
+        for alias in self.legacy_directory_aliases():
+            self.assertNotIn(alias, implement)
         self.assertIn("追加任务", implement)
         self.assertIn("回到 `speckit.implement`", implement)
         self.assertIn("仍然运行 `speckit.converge`", implement)
