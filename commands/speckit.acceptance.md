@@ -30,10 +30,13 @@ $ARGUMENTS
 2. **校验可选验收模拟**
    - 查找 `specs/[NNN-mX-slug]/acceptance-simulation.md`。
    - 先扫描总表与明细中的状态。只要存在任何 `AI_FAIL`，**即使 baseline 已过期**，也立即停止且**不得生成**正式验收报告；要求修复后重新 converge，并重跑验收模拟。按模拟记录的根因路由到 `speckit.clarify`、`speckit.plan`、`speckit.tasks` 或 `speckit.implement`。
-   - 无 `AI_FAIL` 时，只有同时满足以下条件才视为“当前有效”：baseline 的分支、commit、`spec.md`/`plan.md`/`tasks.md` SHA-256 摘要指纹和 converge 结果均与当前状态一致；状态数量与逐项状态一致；结论与逐项状态一致；每个 `AI_PASS` 有实际执行证据；每个 `HUMAN_REQUIRED`/`BLOCKED` 有完整人工指南。
-   - 模拟报告的 commit 或任一摘要指纹变化、分支不符、converge 结果不是 `Converged`，均视为**过期**。模拟报告缺失、格式不可解析、状态或结论不一致、证据/指南不完整、baseline 无效时，同样不得导入 AI 结果。
+   - **工作区新鲜度**：无 `AI_FAIL` 时运行 `git status --porcelain=v1 --untracked-files=all`。除目标 `acceptance-simulation.md` 外，只要存在任一已跟踪或未跟踪变更，baseline 即视为**过期**，不得导入任何 AI 结果。
+   - **来源覆盖**：从当前 `spec.md`、`.specify/memory/milestones.md` 和 `tasks.md` **独立重算**期望验收集，使用稳定来源键：spec 用 `spec:AC-01`（或既有标识），里程碑用 `milestone:Mx-UA-01`，tasks“需人工”用 `tasks:T012-manual`。模拟总表的来源键必须与当前期望集合恰好一次一一对应；存在缺失、额外或重复来源键、无法识别的来源键、重复验收编号，均不得导入 AI 结果。模拟自报的覆盖结果不能代替本次重算。
+   - **baseline 与一致性**：记录的工作区清洁基线必须为 `PASS`，且当前分支、commit、`spec.md`/`plan.md`/`tasks.md` SHA-256 摘要指纹和 converge 结果均匹配；状态数量与逐项状态一致；结论与逐项状态一致；每个 `HUMAN_REQUIRED`/`BLOCKED` 有完整人工指南。
+   - **AI_PASS 成功证据**：每个 `AI_PASS` 必须有实际执行的完整命令、关键输出和证据路径，并且退出码必须为 0。若声明“预期非零成功契约”，必须同时记录契约来源、精确预期退出码、为何非零代表成功和可复核输出证明；缺少任一项都不得作为 `AI_PASS` 导入。仅有执行记录、非零失败退出码或无法复核的摘录均不得导入为通过。
+   - 模拟报告的 commit 或任一摘要指纹变化、分支不符、converge 结果不是 `Converged`，均视为**过期**。模拟报告缺失、格式不可解析、工作区不干净、来源覆盖不一致、状态或结论不一致、成功证据/人工指南不完整、baseline 无效时，同样不得导入 AI 结果。
    - 当前有效且不存在 `AI_FAIL`：可导入 `AI_PASS` 与 `HUMAN_REQUIRED`/`BLOCKED` 人工项。
-   - 缺失或过期：退回**全人工验收**，将 spec 验收标准、里程碑“用户验收指导”和 tasks“需人工”任务全部展开为待人工项；提示用户可先运行 `/speckit.simulate-acceptance`，但不得等待它而阻塞现有流程。
+   - 缺失、过期或无效：退回**全人工验收**，将当前期望验收集中的 spec 验收标准、里程碑“用户验收指导”和 tasks“需人工”任务全部展开为待人工项；提示用户可先运行 `/speckit.simulate-acceptance`，但不得等待它而阻塞现有流程。
 
 3. **采集实现事实**
    - 读 `spec.md`（需求点/验收标准）、`plan.md`（技术决策/验证命令）、`tasks.md`（已完成任务与“需人工”任务）。

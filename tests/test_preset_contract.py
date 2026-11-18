@@ -93,3 +93,34 @@ class PresetContractTests(unittest.TestCase):
             "./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md",
             implementation_report,
         )
+
+        with self.subTest("source-to-simulation coverage"):
+            for source_key in ("spec:AC-01", "milestone:Mx-UA-01", "tasks:T012-manual"):
+                self.assertIn(source_key, command)
+                self.assertIn(source_key, template)
+            self.assertIn("期望验收集", command)
+            self.assertIn("来源覆盖校验", template)
+            self.assertIn("来源键", template)
+            self.assertIn("恰好一次", acceptance)
+            self.assertIn("独立重算", acceptance)
+            self.assertIn("缺失、额外或重复", acceptance)
+            self.assertIn("来源覆盖", implementation_report)
+
+        with self.subTest("clean worktree freshness"):
+            status_command = "git status --porcelain=v1 --untracked-files=all"
+            self.assertIn(status_command, command)
+            self.assertIn(status_command, acceptance)
+            self.assertIn("工作区清洁基线", command)
+            self.assertIn("工作区清洁基线", template)
+            self.assertIn("已跟踪或未跟踪", acceptance)
+            self.assertIn("过期", acceptance)
+            self.assertIn("工作区清洁基线", implementation_report)
+
+        with self.subTest("successful command evidence"):
+            self.assertIn("退出码必须为 0", command)
+            self.assertIn("退出码必须为 0", acceptance)
+            self.assertIn("预期非零成功契约", command)
+            self.assertIn("预期非零成功契约", template)
+            self.assertIn("预期非零成功契约", acceptance)
+            self.assertNotIn("[0 或其他]", template)
+            self.assertIn("AI_PASS 成功证据", implementation_report)
