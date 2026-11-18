@@ -1,5 +1,5 @@
 ---
-description: （定制覆盖）跨产物一致性分析——报告输出至 ./.prepare/docs/specs-analysis-repo/，每 spec 一份按轮次追加；问题分 Critical/High/Medium/Low 并使用唯一修复入口。
+description: （定制覆盖）跨产物一致性分析——报告输出至 ./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md，每 spec 一份按轮次追加；问题分 Critical/High/Medium/Low 并使用唯一修复入口。
 handoffs:
   - label: 消除问题
     agent: speckit.rectify
@@ -13,7 +13,7 @@ handoffs:
 
 ## 定制输出规则
 
-1. **报告位置**：`./.prepare/docs/specs-analysis-repo/[spec目录名]-analysis.md`（默认输出目录，目录不存在则创建；如需改配，在 constitution 中登记自定义路径并保持全项目一致）。**每个 spec 一份报告，按轮次依次追加，只增不删。**
+1. **报告位置**：`./.auxiliary/docs/specs-analysis-repo/[spec-dir]-analysis.md`（默认输出目录，目录不存在则创建；如需改配，在 constitution 中登记自定义路径并保持全项目一致）。**每个 spec 一份报告，按轮次依次追加，只增不删。**
 2. **轮次编号**：扫描该 spec 报告已有"轮次 N"节，取 N+1；首次分析则创建文件（从 analysis-report-template 生成骨架）并写"轮次 1"。
 3. **轮次摘要**：每轮必须记录状态、轮次、spec/plan/tasks/constitution 输入基线，以及 Critical/High/Medium/Low 各级问题计数。
 4. **严重级体系**（替代/映射核心的 CRITICAL/WARNING）：
